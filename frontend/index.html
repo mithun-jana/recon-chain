@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recon Chain · Multi‑Scan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f6f8fa;
+      color: #1e2b34;
+      transition: background 0.25s ease, color 0.2s ease;
+    }
+
+    body.dark {
+      background: #161c1e;
+      color: #dce6e2;
+    }
+
+    ::selection {
+      background: #ffb00055;
+      color: #0b1210;
+    }
+
+    #root {
+      min-height: 100vh;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cdd9d4;
+      border-radius: 20px;
+    }
+    body.dark ::-webkit-scrollbar-thumb {
+      background: #364a44;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      min-height: 100vh;
+      transition: background 0.2s;
+    }
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sidebar {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-right: 1px solid rgba(0, 0, 0, 0.06);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      overflow-y: auto;
+      max-height: 100vh;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    body.dark .sidebar {
+      background: rgba(26, 34, 36, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-right: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .brand-mark {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 22px;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffb000, #f57c00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .brand-sub {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: #6b7f78;
+    }
+    body.dark .brand-sub {
+      color: #8fa39b;
+    }
+
+    .theme-toggle {
+      margin-left: auto;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 40px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      transition: 0.15s;
+    }
+    body.dark .theme-toggle {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .theme-toggle span {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1e2b34;
+    }
+    body.dark .theme-toggle span {
+      color: #cdd9d4;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #5f7470;
+      margin-bottom: 5px;
+    }
+    body.dark .field label {
+      color: #8fa39b;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    select {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #dbe3e0;
+      color: #1e2b34;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: 0.15s;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+    body.dark input[type="text"],
+    body.dark input[type="password"],
+    body.dark select {
+      background: #1e282b;
+      border-color: #2f3f3f;
+      color: #dce6e2;
+    }
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #ffb000;
+      box-shadow: 0 0 0 3px #ffb00033;
+    }
+
+    .scope-tabs {
+      display: flex;
+      gap: 6px;
+      background: #f0f4f2;
+      border-radius: 16px;
+      padding: 4px;
+    }
+    body.dark .scope-tabs {
+      background: #1e282b;
+    }
+    .scope-tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px 6px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      color: #5f7470;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    body.dark .scope-tab {
+      color: #8fa39b;
+    }
+    .scope-tab.active {
+      background: #ffb000;
+      color: #0b1210;
+      box-shadow: 0 2px 6px #ffb00044;
+    }
+    body.dark .scope-tab.active {
+      background: #ffb000;
+      color: #0b1210;
+    }
+
+    .chain {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .chain-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #5f7470;
+      margin-bottom: 12px;
+    }
+    body.dark .chain-title {
+      color: #8fa39b;
+    }
+    .chain-node {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: 0.15s;
+      background: transparent;
+    }
+    .chain-node:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+    body.dark .chain-node:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .chain-node.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .chain-node.disabled:hover {
+      background: transparent;
+    }
+    .chain-link {
+      width: 2px;
+      height: 18px;
+      margin-left: 18px;
+      background: #dbe3e0;
+      transition: 0.2s;
+    }
+    body.dark .chain-link {
+      background: #2f3f3f;
+    }
+    .chain-link.active {
+      background: #ffb000;
+    }
+    .chain-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 40px;
+      border: 2px solid #dbe3e0;
+      background: #f0f4f2;
+      transition: 0.2s;
+      flex-shrink: 0;
+    }
+    body.dark .chain-dot {
+      border-color: #2f3f3f;
+      background: #1e282b;
+    }
+    .chain-node.on .chain-dot {
+      border-color: #ffb000;
+      background: #ffb000;
+      box-shadow: 0 0 10px #ffb00066;
+    }
+    .chain-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 450;
+    }
+    .chain-hint {
+      font-size: 10px;
+      color: #7c8f89;
+      margin-left: auto;
+      background: rgba(0, 0, 0, 0.03);
+      padding: 2px 10px;
+      border-radius: 30px;
+    }
+    body.dark .chain-hint {
+      background: rgba(255, 255, 255, 0.04);
+      color: #8fa39b;
+    }
+
+    .btn {
+      background: #ffb000;
+      color: #0b1210;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.15s;
+      box-shadow: 0 4px 8px #ffb00033;
+      letter-spacing: 0.2px;
+    }
+    .btn:hover {
+      background: #ffc433;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px #ffb00055;
+    }
+    .btn:disabled {
+      background: #dbe3e0;
+      color: #7c8f89;
+      box-shadow: none;
+      transform: none;
+      cursor: not-allowed;
+    }
+    body.dark .btn:disabled {
+      background: #2f3f3f;
+      color: #5f7470;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid #dbe3e0;
+      color: #5f7470;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    body.dark .btn-ghost {
+      border-color: #2f3f3f;
+      color: #8fa39b;
+    }
+    .btn-ghost:hover {
+      background: rgba(0, 0, 0, 0.06);
+      border-color: #8fae9d;
+      color: #2f5147;
+    }
+    .btn-ghost:active {
+      transform: scale(0.96);
+      background: rgba(0, 0, 0, 0.1);
+    }
+    body.dark .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #6b8a80;
+      color: #d4e6df;
+    }
+    body.dark .btn-ghost:active {
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-danger {
+      background: #ff6b5d;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .btn-danger:hover {
+      background: #ff4433;
+    }
+    .btn-success {
+      background: #2dd4a7;
+      color: #0b1210;
+      border: none;
+      border-radius: 40px;
+      padding: 6px 16px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .btn-success:hover {
+      opacity: 0.8;
+    }
+
+    .history-panel {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      border-radius: 20px;
+      padding: 8px 10px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    body.dark .history-panel {
+      background: rgba(30, 40, 43, 0.7);
+      border-color: rgba(255, 255, 255, 0.04);
+    }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 6px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .history-item:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+    body.dark .history-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .history-item .target {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .history-item .meta {
+      font-size: 10px;
+      color: #7c8f89;
+    }
+    .history-item .status {
+      font-size: 10px;
+      padding: 2px 10px;
+      border-radius: 40px;
+      font-weight: 500;
+      background: rgba(0, 0, 0, 0.04);
+    }
+    body.dark .history-item .status {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .history-item .status.completed {
+      color: #2dd4a7;
+    }
+    .history-item .status.running {
+      color: #ffb000;
+    }
+    .history-item .status.failed {
+      color: #ff6b5d;
+    }
+
+    .main {
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      overflow-y: auto;
+      max-height: 100vh;
+      background: #ffffff;
+      transition: background 0.2s;
+    }
+    body.dark .main {
+      background: #161c1e;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .status-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 5px 16px;
+      border-radius: 40px;
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid #dbe3e0;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    body.dark .status-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: #2f3f3f;
+    }
+    .status-pill.completed {
+      color: #2dd4a7;
+      border-color: #2dd4a7;
+    }
+    .status-pill.running {
+      color: #ffb000;
+      border-color: #ffb000;
+      animation: pulse 1.5s infinite;
+    }
+    .status-pill.failed {
+      color: #ff6b5d;
+      border-color: #ff6b5d;
+    }
+
+    @keyframes pulse {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .summary-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .summary-chip {
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid #eef3f0;
+      border-radius: 40px;
+      padding: 6px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    body.dark .summary-chip {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: #263537;
+    }
+    .summary-chip b {
+      color: #ffb000;
+      font-size: 15px;
+      margin-right: 6px;
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid #eef3f0;
+      padding: 12px 16px;
+      border-radius: 30px;
+      transition: 0.2s;
+    }
+    body.dark .filter-bar {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: #263537;
+    }
+    .filter-bar input,
+    .filter-bar select {
+      width: auto;
+      min-width: 100px;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 40px;
+      background: #ffffff;
+      border: 1px solid #dbe3e0;
+      color: #1e2b34;
+    }
+    body.dark .filter-bar input,
+    body.dark .filter-bar select {
+      background: #1e282b;
+      border-color: #2f3f3f;
+      color: #dce6e2;
+    }
+    .filter-bar .sep {
+      width: 1px;
+      height: 28px;
+      background: #dbe3e0;
+    }
+    body.dark .filter-bar .sep {
+      background: #2f3f3f;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+    }
+    thead th {
+      text-align: left;
+      padding: 8px 12px;
+      color: #5f7470;
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    body.dark thead th {
+      color: #8fa39b;
+    }
+    tbody td {
+      padding: 12px 12px;
+      background: rgba(0, 0, 0, 0.01);
+      border-radius: 16px;
+      vertical-align: middle;
+    }
+    body.dark tbody td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    tbody tr {
+      transition: 0.1s;
+    }
+    tbody tr:hover td {
+      background: rgba(0, 0, 0, 0.03);
+    }
+    body.dark tbody tr:hover td {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 30px;
+      font-size: 10px;
+      font-weight: 500;
+      border: 1px solid #eef3f0;
+      margin: 1px 4px 1px 0;
+      background: #ffffff;
+    }
+    body.dark .badge {
+      border-color: #263537;
+      background: transparent;
+    }
+    .badge.type-http_service {
+      color: #2dd4a7;
+      border-color: #2dd4a7;
+    }
+    .badge.type-subdomain {
+      color: #ffb000;
+      border-color: #ffb000;
+    }
+    .badge.type-open_port {
+      color: #ff9d5c;
+      border-color: #ff9d5c;
+    }
+    .badge.type-js_file {
+      color: #c792ea;
+      border-color: #c792ea;
+    }
+    .badge.type-url {
+      color: #64b5f6;
+      border-color: #64b5f6;
+    }
+    .badge.type-directory {
+      color: #ba68c8;
+      border-color: #ba68c8;
+    }
+    .badge.type-finding {
+      color: #ffb74d;
+      border-color: #ffb74d;
+    }
+    .badge.type-device {
+      color: #66d9c4;
+      border-color: #66d9c4;
+    }
+    .badge.sev-high {
+      background: #ff6b5d;
+      color: #0b1210;
+      border-color: #ff6b5d;
+    }
+    .badge.sev-medium {
+      background: #ffb000;
+      color: #0b1210;
+      border-color: #ffb000;
+    }
+
+    .code-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    .muted {
+      color: #7c8f89;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #7c8f89;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    .selection-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 16px;
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid #eef3f0;
+      border-radius: 40px;
+    }
+    body.dark .selection-bar {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: #263537;
+    }
+    .selection-bar .count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #5f7470;
+    }
+    .selection-bar .sep {
+      width: 1px;
+      height: 24px;
+      background: #dbe3e0;
+    }
+    body.dark .selection-bar .sep {
+      background: #2f3f3f;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-content {
+      max-width: 90%;
+      max-height: 90%;
+      background: #ffffff;
+      border-radius: 32px;
+      padding: 24px;
+      position: relative;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+    }
+    body.dark .modal-content {
+      background: #1e282b;
+    }
+    .modal-content img {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 16px;
+    }
+    .modal-close {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      background: #ff6b5d;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(255, 107, 93, 0.3);
+    }
+    .modal-close:hover {
+      background: #ff4433;
+    }
+
+    .theme-switch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+    .theme-switch .label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #5f7470;
+    }
+    body.dark .theme-switch .label {
+      color: #8fa39b;
+    }
+    .toggle-track {
+      width: 44px;
+      height: 24px;
+      background: #dbe3e0;
+      border-radius: 40px;
+      position: relative;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    body.dark .toggle-track {
+      background: #2f3f3f;
+    }
+    .toggle-track .thumb {
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 40px;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: 0.2s;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    body.dark .toggle-track .thumb {
+      left: 22px;
+      background: #ffb000;
+    }
+
+    .btn-success.small {
+      font-size: 11px;
+      padding: 4px 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    window.RECON_API_BASE = window.RECON_API_BASE ||
+      (window.location.protocol + "//" + window.location.hostname + ":8000");
+    const API = window.RECON_API_BASE;
+    // API key removed — all requests go without Authorization header
+
+    async function apiFetch(url, options = {}) {
+      return fetch(url, { ...options });
+    }
+
+    const STAGES = [
+      { id: "subdomain_enum", label: "subdomain_enum", hint: "wildcard only" },
+      { id: "url_collect", label: "url_collect", hint: "passive" },
+      { id: "katana_crawl", label: "katana_crawl", hint: "active" },
+      { id: "dir_fuzz", label: "dir_fuzz", hint: "ffuf/feroxbuster" },
+      { id: "device_scan", label: "device_scan", hint: "cidr only" },
+      { id: "port_scan", label: "port_scan", hint: "port + nmap" },
+      { id: "http_probe", label: "http_probe", hint: "" },
+      { id: "screenshot", label: "screenshot", hint: "needs playwright" },
+    ];
+
+    const SCOPE_MODES = [
+      { id: "wildcard", label: "Wildcard" },
+      { id: "cidr", label: "CIDR" },
+    ];
+
+    const truncateTarget = (target) => {
+      if (!target) return '';
+      const parts = target.split(',').map(p => p.trim()).filter(Boolean);
+      if (parts.length === 0) return '';
+      const first = parts[0];
+      const shortFirst = first.length > 28 ? first.slice(0, 28) + '…' : first;
+      if (parts.length === 1) return shortFirst;
+      return `${shortFirst} +${parts.length - 1}`;
+    };
+
+    
+    const { useState, useEffect, useRef } = React;
+
+    
+    function StageChain({ enabled, scopeMode, onToggle }) {
+      const CIDR_STAGES = new Set(["device_scan", "port_scan"]);
+      return React.createElement(
+        "div", { className: "chain" },
+        React.createElement("div", { className: "chain-title" }, "Recon Chain"),
+        STAGES.map((s, i) => {
+          const disabled = scopeMode === "cidr" ?
+            !CIDR_STAGES.has(s.id) :
+            (s.id === "device_scan" || (s.id === "subdomain_enum" && scopeMode !== "wildcard"));
+          const on = enabled.includes(s.id);
+          return React.createElement(
+            React.Fragment, { key: s.id },
+            i > 0 && React.createElement("div", {
+              className: `chain-link ${on && enabled.includes(STAGES[i - 1].id) ? "active" : ""}`
+            }),
+            React.createElement(
+              "div", {
+                className: `chain-node ${on ? "on" : ""} ${disabled ? "disabled" : ""}`,
+                onClick: () => !disabled && onToggle(s.id),
+                title: disabled ?
+                  (scopeMode === "cidr" ? "CIDR scope only scans devices/ports/services" :
+                    " CIDR scope ") :
+                  ""
+              },
+              React.createElement("div", { className: "chain-dot" }),
+              React.createElement("div", { className: "chain-label" }, s.label),
+              s.hint && React.createElement("div", { className: "chain-hint" }, s.hint)
+            )
+          );
+        })
+      );
+    }
+
+    function WordlistUpload({ config, setConfig }) {
+      const [uploading, setUploading] = useState(false);
+      const [uploadedName, setUploadedName] = useState(config.wordlistName || null);
+      const handleFile = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+          const form = new FormData();
+          form.append("file", file);
+          const res = await apiFetch(`${API}/wordlists`, { method: "POST", body: form });
+          if (!res.ok) throw new Error(await res.text());
+          const data = await res.json();
+          setConfig(c => ({ ...c, wordlist_id: data.wordlist_id, wordlistName: file.name }));
+          setUploadedName(`${file.name} (${data.line_count} words)`);
+        } catch (err) { alert("Wordlist upload failed: " + err.message); } finally { setUploading(false); }
+      };
+      const clearWordlist = () => {
+        setConfig(c => ({ ...c, wordlist_id: null, wordlistName: null }));
+        setUploadedName(null);
+      };
+      return React.createElement(
+        "div", { className: "field" },
+        React.createElement("label", null, "Fuzzing Wordlist"),
+        uploadedName ? React.createElement(
+          "div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+          React.createElement("div", { className: "muted", style: { fontSize: 12, flex: 1 } }, uploadedName),
+          React.createElement("button", { className: "btn-ghost", onClick: clearWordlist }, "Use default")
+        ) : React.createElement(
+          React.Fragment, null,
+          React.createElement("input", {
+            type: "file", accept: ".txt", onChange: handleFile, disabled: uploading,
+            style: { fontSize: 12, padding: "6px 0" }
+          }),
+          React.createElement("div", { className: "muted", style: { fontSize: 11, marginTop: 4 } },
+            uploading ? "Uploading…" : "No file selected — bundled default will be used"
+          )
+        )
+      );
+    }
+
+    function Sidebar({ config, setConfig, onRun, running, history, onLoadHistory, onClearHistory, darkMode, setDarkMode }) {
+      const toggleStage = (id) => {
+        setConfig(c => ({
+          ...c,
+          enabled_stages: c.enabled_stages.includes(id) ?
+            c.enabled_stages.filter(s => s !== id) :
+            [...c.enabled_stages, id],
+        }));
+      };
+
+      return React.createElement(
+        "div", { className: "sidebar" },
+        React.createElement(
+          "div", { style: { display: "flex", alignItems: "center" } },
+        React.createElement(
+          "div", { className: "brand" },
+          React.createElement("span", { className: "brand-mark" }, "recon⛓"),
+          React.createElement("span", { className: "brand-sub" }, "multi‑scan"),
+          React.createElement("span", {
+            style: {
+              fontSize: 10,
+              fontWeight: 600,
+              color: "#ffffff",
+              background: "#3b7a68",
+              padding: "2px 7px",
+              borderRadius: 4,
+              marginLeft: 0,
+              letterSpacing: 0.4,
+              display: "inline-block"
+            }
+          }, "v1")
+        ),
+
+          React.createElement(
+            "div", { className: "theme-switch" },
+            React.createElement("span", { className: "label" }, darkMode ? "🌙" : "☀️"),
+            React.createElement(
+              "div", { className: "toggle-track", onClick: () => setDarkMode(!darkMode) },
+              React.createElement("div", { className: "thumb" })
+            )
+          )
+        ),
+        React.createElement(
+          "div", { style: { fontSize: 9, opacity: 0.4, letterSpacing: 0.3, marginTop: -20 } },
+          "@mithun-jana"
+        ),
+
+        React.createElement(
+          "div", null,
+          React.createElement(
+            "div", { className: "history-header", style: { display: "flex", justifyContent: "space-between", marginBottom: 8 } },
+            React.createElement("span", { style: { fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, color: "#5f7470" } }, "Scan History"),
+            React.createElement("button", { className: "btn-ghost", onClick: onClearHistory, style: { fontSize: '10px', padding: '2px 12px' } }, "Clear All")
+          ),
+          React.createElement(
+            "div", { className: "history-panel" },
+            history.length === 0 ?
+              React.createElement("div", { className: "muted", style: { fontSize: '11px', padding: '12px 0' } }, "No scans yet") :
+              history.map((scan, idx) => React.createElement(
+                "div", { key: idx, className: "history-item", onClick: () => onLoadHistory(scan) },
+                React.createElement(
+                  "div", null,
+                  React.createElement("div", { className: "target" }, truncateTarget(scan.name || scan.target)),
+                  React.createElement("div", { className: "meta" },
+                    new Date(scan.created_at || scan.timestamp).toLocaleString(),
+                    " · ", scan.asset_count || 0, " assets"
+                  )
+                ),
+                React.createElement("span", { className: `status ${scan.status}` }, scan.status)
+              ))
+          )
+        ),
+
+        React.createElement(
+          "div", null,
+          React.createElement(
+            "div", { className: "field" },
+            React.createElement("label", null, "Target"),
+            React.createElement("input", {
+              type: "text", placeholder: "example.com or 10.0.0.0/24",
+              value: config.target,
+              onChange: e => setConfig(c => ({ ...c, target: e.target.value }))
+            })
+          ),
+          React.createElement(
+            "div", { className: "field" },
+            React.createElement("label", null, "Scope Mode"),
+            React.createElement(
+              "div", { className: "scope-tabs" },
+              SCOPE_MODES.map(m => React.createElement(
+                "div", {
+                  key: m.id,
+                  className: `scope-tab ${config.scope_mode === m.id ? "active" : ""}`,
+                  onClick: () => setConfig(c => {
+                    if (c.scope_mode === m.id) return c;
+                    let enabled_stages = c.enabled_stages;
+                    if (m.id === "cidr") {
+                      const has = c.enabled_stages.some(s => s === "device_scan" || s === "port_scan");
+                      if (!has) enabled_stages = ["device_scan", "port_scan"];
+                    } else if (m.id === "wildcard" && c.scope_mode === "cidr") {
+                      enabled_stages = ["subdomain_enum", "http_probe"];
+                    }
+                    return { ...c, scope_mode: m.id, enabled_stages };
+                  })
+                },
+                m.label
+              ))
+            )
+          ),
+          config.enabled_stages.includes("dir_fuzz") && React.createElement(WordlistUpload, { config, setConfig })
+        ),
+
+        React.createElement(StageChain, {
+          enabled: config.enabled_stages,
+          scopeMode: config.scope_mode,
+          onToggle: toggleStage
+        }),
+
+        React.createElement(
+          "button", {
+            className: "btn",
+            onClick: () => onRun(),
+            disabled: running || !config.target
+          },
+          running ? "Running…" : "Run Recon Chain"
+        )
+      );
+    }
+
+    function AssetRow({ a, selected, onToggleSelect, onViewScreenshot }) {
+      const sev = a.meta?.severity;
+      const statusCode = a.meta?.status_code;
+      const title = a.meta?.title;
+      const tech = a.meta?.tech;
+      const port = a.meta?.port;
+      const ip = a.meta?.ip;
+      const resolvedFrom = a.meta?.resolved_from;
+      const endpoints = a.meta?.endpoints_found;
+      const secrets = a.meta?.possible_secrets;
+      const screenshotPath = a.meta?.screenshot_path;
+      const hasScreenshot = screenshotPath && a.type === 'finding';
+      const isDirectory = a.type === "directory";
+      const isPort = a.type === "open_port";
+      const isDevice = a.type === "device";
+      const mac = a.meta?.mac;
+      const hostname = a.meta?.hostname;
+      const contentLength = a.meta?.content_length;
+      const responseTime = a.meta?.response_time_ms || a.meta?.response_time;
+      let sizeDisplay = '';
+      if (contentLength && contentLength > 0) {
+        const kb = contentLength / 1024;
+        sizeDisplay = kb > 1024 ? `${(kb/1024).toFixed(1)} MB` : `${kb.toFixed(1)} KB`;
+      }
+
+      return React.createElement(
+        "tr", null,
+        React.createElement("td", null,
+          React.createElement("input", {
+            type: "checkbox",
+            checked: selected || false,
+            onChange: () => onToggleSelect(a.id)
+          })
+        ),
+        React.createElement("td", null, React.createElement("span", { className: `badge type-${a.type}` }, a.type)),
+        React.createElement("td", { className: "code-val" }, a.value),
+        React.createElement("td", { className: "muted" }, a.source || "unknown"),
+        React.createElement(
+          "td", null,
+          isDirectory ? [
+            React.createElement("span", { key: "status", className: "badge" }, `HTTP ${statusCode || '?'}`),
+            a.meta?.content_length && React.createElement("span", { key: "size", className: "muted", style: { marginLeft: '4px' } },
+              `${a.meta.content_length} bytes`
+            )
+          ] :
+          isDevice ? [
+            React.createElement("span", { key: "ip", className: "badge", style: { backgroundColor: '#66d9c4', color: '#0B1210' } },
+              `IP ${a.meta?.ip || a.value}`
+            ),
+            hostname && React.createElement("span", { key: "hostname", className: "badge", style: { backgroundColor: '#64b5f6', color: '#0B1210' } }, hostname),
+            mac ? React.createElement("span", { key: "mac", className: "badge", style: { backgroundColor: '#ba68c8', color: '#0B1210' } },
+              `MAC ${mac}`
+            ) : React.createElement("span", { key: "no-mac", className: "muted", style: { fontSize: '10px', marginLeft: '4px' } },
+              "MAC not visible"
+            )
+          ] :
+          isPort ? [
+            React.createElement("span", { key: "port-badge", className: "badge", style: { backgroundColor: '#ff9d5c', color: '#0B1210' } },
+              `Port ${port}`
+            ),
+            (a.meta?.service || a.meta?.product) && React.createElement("span", { key: "service", className: "badge", style: { backgroundColor: '#64b5f6', color: '#0B1210' } },
+              `${a.meta.service || a.meta.product} ${a.meta.version || ''}`.trim()
+            ),
+            resolvedFrom && resolvedFrom !== ip && React.createElement("span", { key: "resolved", className: "muted", style: { marginLeft: '6px', fontSize: '10px' } },
+              `(from ${resolvedFrom})`
+            ),
+          ] :
+          [
+            hasScreenshot && React.createElement(
+              "button", {
+                key: "screenshot",
+                className: "badge",
+                style: { cursor: 'pointer', backgroundColor: '#64b5f6', color: '#0B1210', border: 'none' },
+                onClick: (e) => { e.stopPropagation();
+                  onViewScreenshot(a); }
+              },
+              "📷 View Screenshot"
+            ),
+            statusCode && React.createElement(
+              "span", { key: "status", className: `badge ${statusCode >= 200 && statusCode < 300 ? 'sev-medium' : 'sev-high'}`,
+                style: {
+                  backgroundColor: statusCode >= 200 && statusCode < 300 ? '#2DD4A7' : '#FF6B5D',
+                  color: '#0B1210'
+                }
+              },
+              `HTTP ${statusCode}`
+            ),
+            tech && tech.length > 0 && tech.map(t => React.createElement("span", { key: t, className: "badge", style: { backgroundColor: '#c792ea', color: '#0B1210' } }, t)),
+            contentLength && contentLength > 0 && React.createElement(
+              "span", { key: "size", className: "badge", style: { backgroundColor: '#64b5f6', color: '#0B1210' } },
+              sizeDisplay
+            ),
+            responseTime && responseTime > 0 && React.createElement(
+              "span", { key: "time", className: "badge", style: { backgroundColor: '#2DD4A7', color: '#0B1210' } },
+              `${responseTime} ms`
+            ),
+            title && React.createElement("span", { key: "title", className: "muted", style: { marginLeft: '4px' } }, title),
+            port && !isPort && React.createElement("span", { key: "port", className: "badge" }, `port ${port}`),
+            sev && sev !== "info" && React.createElement("span", { key: "severity", className: `badge sev-${sev}` }, sev),
+            secrets && secrets.length > 0 && React.createElement("span", { key: "secrets", className: "badge sev-high" }, "secret leak"),
+            endpoints && endpoints.length > 0 && React.createElement("span", { key: "endpoints", className: "badge" },
+              `${endpoints.length} endpoints`
+            )
+          ]
+        )
+      );
+    }
+
+    function ScreenshotModal({ asset, onClose }) {
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+      const [imageUrl, setImageUrl] = useState(null);
+      useEffect(() => {
+        const fetchScreenshot = async () => {
+          try {
+            const res = await apiFetch(`${API}/assets/${asset.id}/screenshot`);
+            if (!res.ok) throw new Error('Failed to load screenshot');
+            const blob = await res.blob();
+            setImageUrl(URL.createObjectURL(blob));
+            setLoading(false);
+          } catch (err) { setError(err.message);
+            setLoading(false); }
+        };
+        fetchScreenshot();
+        return () => { if (imageUrl) URL.revokeObjectURL(imageUrl); };
+      }, [asset.id]);
+      return React.createElement(
+        "div", { className: "modal-overlay", onClick: onClose },
+        React.createElement(
+          "div", { className: "modal-content", onClick: e => e.stopPropagation() },
+          React.createElement("button", { className: "modal-close", onClick: onClose }, "✕"),
+          loading ? React.createElement("div", { className: "muted", style: { padding: '40px', textAlign: 'center' } }, "Loading screenshot…") :
+          error ? React.createElement("div", { style: { color: '#ff6b5d', padding: '40px', textAlign: 'center' } }, `Error: ${error}`) :
+          React.createElement("img", { src: imageUrl, alt: `Screenshot of ${asset.value}` }),
+          React.createElement("div", { className: "modal-url", style: { fontFamily: 'JetBrains Mono', fontSize: 12, color: '#7c8f89', marginTop: 12 } },
+            `URL: ${asset.value}`
+          )
+        )
+      );
+    }
+
+    function App() {
+      const [darkMode, setDarkMode] = useState(() => {
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('recon_dark_mode');
+          if (stored !== null) return stored === 'true';
+          return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+        return false;
+      });
+
+      useEffect(() => {
+        document.body.classList.toggle('dark', darkMode);
+        localStorage.setItem('recon_dark_mode', JSON.stringify(darkMode));
+      }, [darkMode]);
+
+      const [config, setConfig] = useState({
+        target: "",
+        scope_mode: "wildcard",
+        enabled_stages: ["subdomain_enum", "http_probe"],
+        wordlist_id: null,
+        wordlistName: null,
+      });
+
+      const [scans, setScans] = useState([]);
+      const [activeScanId, setActiveScanId] = useState(null);
+      const [history, setHistory] = useState([]);
+      const [running, setRunning] = useState(false);
+      const [screenshotAsset, setScreenshotAsset] = useState(null);
+      const [filters, setFilters] = useState({ type: "", search: "", status_code: "", tech: "" });
+      const [selectedAssets, setSelectedAssets] = useState(new Set());
+
+      const filtersRef = useRef(filters);
+      useEffect(() => { filtersRef.current = filters; }, [filters]);
+
+      useEffect(() => { fetchHistory(); }, []);
+
+      useEffect(() => {
+        if (!activeScanId) return;
+        const handle = setTimeout(() => { fetchScanData(activeScanId); }, 300);
+        return () => clearTimeout(handle);
+      }, [activeScanId, filters.type, filters.search, filters.status_code, filters.tech]);
+
+      const fetchHistory = async () => {
+        try {
+          const res = await apiFetch(`${API}/scans`);
+          if (res.ok) { const data = await res.json();
+            setHistory(data); }
+        } catch (e) { console.error('Failed to load history:', e); }
+      };
+
+      const fetchScanData = async (scanId) => {
+        try {
+          const res = await apiFetch(`${API}/scans/${scanId}`);
+          const data = await res.json();
+          const s = await apiFetch(`${API}/scans/${scanId}/summary`);
+          const summary = await s.json();
+          const currentFilters = filtersRef.current;
+          const params = new URLSearchParams();
+          Object.entries(currentFilters).forEach(([k, v]) => { if (v) params.set(k, v); });
+          const a = await apiFetch(`${API}/scans/${scanId}/assets?${params.toString()}`);
+          let assets = await a.json();
+          // dedupe
+          const seen = new Set();
+          assets = assets.filter(a => {
+            const key = `${a.type}:${a.value}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          setScans(prev => prev.map(item =>
+            item.id === scanId ? { ...item, scan: data, summary, assets, status: data.status, running: data.status === "running" } : item
+          ));
+          if (data.status === "completed" || data.status === "failed") {
+            setScans(prev => prev.map(item => item.id === scanId ? { ...item, running: false } : item));
+            fetchHistory();
+          }
+        } catch (e) { console.error('Failed to load scan:', e); }
+      };
+
+      const loadHistory = (historyItem) => {
+        setConfig(c => ({ ...c, target: historyItem.target }));
+        setActiveScanId(historyItem.id);
+        setScans(prev => {
+          const existing = prev.find(s => s.id === historyItem.id);
+          if (existing) return prev;
+          return [...prev, {
+            id: historyItem.id,
+            target: historyItem.target,
+            name: historyItem.name || historyItem.target,
+            status: historyItem.status,
+            scan: historyItem,
+            assets: [],
+            summary: null,
+            running: historyItem.status === "running",
+          }];
+        });
+        fetchScanData(historyItem.id);
+      };
+
+      const clearHistory = async () => {
+        if (!confirm('Clear all FINISHED scan history? Running/queued scans are kept.')) return;
+        try {
+          const res = await apiFetch(`${API}/scans`, { method: 'DELETE' });
+          if (!res.ok) throw new Error(await res.text());
+          const result = await res.json();
+          setScans(prev => prev.filter(s => s.status === 'running' || s.status === 'queued'));
+          setActiveScanId(prev => {
+            const stillThere = scans.find(s => s.id === prev && (s.status === 'running' || s.status === 'queued'));
+            return stillThere ? prev : null;
+          });
+          await fetchHistory();
+          if (result.skipped_running > 0) {
+            alert(`Cleared ${result.deleted} scan(s). ${result.skipped_running} running/queued scan(s) kept.`);
+          }
+        } catch (e) { alert('Failed to clear history: ' + e.message); }
+      };
+
+      const run = async (overrides = {}) => {
+        const target = overrides.target !== undefined ? overrides.target : config.target;
+        const name = overrides.name !== undefined ? overrides.name : (truncateTarget(target) || target);
+        if (!target) return;
+        setRunning(true);
+        const payload = {
+          name,
+          target,
+          scope_mode: config.scope_mode,
+          enabled_stages: config.enabled_stages,
+          wordlist_id: config.wordlist_id || null,
+        };
+        try {
+          const res = await apiFetch(`${API}/scans`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          const newScan = {
+            id: data.id,
+            target: data.target,
+            name: data.name || data.target,
+            status: data.status,
+            scan: data,
+            assets: [],
+            summary: null,
+            running: true,
+          };
+          setScans(prev => [...prev, newScan]);
+          setActiveScanId(data.id);
+          fetchHistory();
+          setRunning(false);
+          const pollInterval = setInterval(() => {
+            setScans(prev => {
+              const currentScan = prev.find(s => s.id === data.id);
+              if (currentScan && (currentScan.status === "completed" || currentScan.status === "failed")) {
+                clearInterval(pollInterval);
+              }
+              return prev;
+            });
+            fetchScanData(data.id);
+          }, 1000);
+        } catch (e) {
+          alert("Could not reach the API at " + API + ". Is the backend running?");
+          setRunning(false);
+        }
+      };
+
+      const stopScan = async (scanId) => {
+        if (!confirm('Stop this scan? Data collected will be preserved.')) return;
+        try {
+          const res = await apiFetch(`${API}/scans/${scanId}/stop`, { method: "POST" });
+          if (res.ok) {
+            setScans(prev => prev.map(s => s.id === scanId ? { ...s, status: 'failed', running: false } : s));
+            fetchHistory();
+            setTimeout(() => fetchScanData(scanId), 500);
+          } else {
+            const err = await res.text();
+            alert(`Failed to stop scan: ${err}`);
+          }
+        } catch (e) { console.error('Error stopping scan:', e); }
+      };
+
+      const exportJSON = (assets, scan) => {
+        if (assets.length === 0) return alert('No assets to export');
+        const data = {
+          scan: scan ? { id: scan.id, target: scan.target, status: scan.status, created_at: scan.created_at } : null,
+          assets: assets,
+          exported_at: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `recon_assets_${scan?.target || 'export'}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const exportCSV = (assets, scan) => {
+        if (assets.length === 0) return alert('No assets to export');
+        const headers = ['Type', 'Value', 'Source', 'Port', 'IP', 'Service', 'Status Code', 'Title', 'Tech', 'Severity'];
+        const rows = assets.map(a => [
+          a.type,
+          a.value,
+          a.source || 'unknown',
+          a.meta?.port || '',
+          a.meta?.ip || '',
+          a.meta?.service || '',
+          a.meta?.status_code || '',
+          a.meta?.title || '',
+          (a.meta?.tech || []).join('; '),
+          a.meta?.severity || ''
+        ]);
+        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `recon_assets_${scan?.target || 'export'}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const activeScan = scans.find(s => s.id === activeScanId);
+      const activeAssets = activeScan?.assets || [];
+      const activeSummary = activeScan?.summary;
+      const activeScanData = activeScan?.scan;
+
+      const toggleSelect = (id) => {
+        const newSelected = new Set(selectedAssets);
+        if (newSelected.has(id)) newSelected.delete(id);
+        else newSelected.add(id);
+        setSelectedAssets(newSelected);
+      };
+
+      const toggleSelectAll = () => {
+        if (selectedAssets.size === activeAssets.length && activeAssets.length > 0) {
+          setSelectedAssets(new Set());
+        } else {
+          const all = new Set(activeAssets.map(a => a.id));
+          setSelectedAssets(all);
+        }
+      };
+
+      const runOnSelected = () => {
+        if (selectedAssets.size === 0) return alert('Select assets first');
+        const values = Array.from(selectedAssets)
+          .map(id => activeAssets.find(a => a.id === id))
+          .filter(Boolean)
+          .map(a => a.value);
+        const urls = Array.from(new Set(values));
+        const target = urls.join(', ');
+        const name = urls.length === 1 ?
+          (urls[0].length > 28 ? urls[0].slice(0, 28) + '…' : urls[0]) :
+          `${urls[0].length > 20 ? urls[0].slice(0, 20) + '…' : urls[0]} +${urls.length - 1}`;
+        setConfig(c => ({ ...c, target }));
+        run({ target, name });
+        setSelectedAssets(new Set());
+      };
+
+      return React.createElement(
+        "div", { className: "app" },
+        React.createElement(Sidebar, {
+          config, setConfig, onRun: run, running, history,
+          onLoadHistory: loadHistory, onClearHistory: clearHistory,
+          darkMode, setDarkMode
+        }),
+        React.createElement(
+          "div", { className: "main" },
+          React.createElement(
+            "div", { className: "topbar" },
+            React.createElement(
+              "div", null,
+              React.createElement(
+                "div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 600 } },
+                activeScanData ? truncateTarget(activeScanData.name || activeScanData.target) : "No scan selected"
+              ),
+              React.createElement(
+                "div", { className: "muted", style: { fontSize: 12 } },
+                activeScanData ? `scope: ${activeScanData.scope_mode} · ID: ${activeScanData.id}` : "run a new scan or load from history"
+              )
+            ),
+            React.createElement(
+              "div", { style: { display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' } },
+              activeScanData && React.createElement("span", { className: `status-pill ${activeScanData.status}` }, activeScanData.status),
+              activeScan && activeScan.running && React.createElement(
+                "button", { className: "btn-danger", onClick: () => stopScan(activeScan.id), style: { fontSize: '11px', padding: '6px 14px' } },
+                "⏹ Stop Scan"
+              ),
+              activeAssets.length > 0 && React.createElement(
+                React.Fragment, null,
+                React.createElement("button", { className: "btn-success small", onClick: () => exportJSON(activeAssets, activeScanData) }, "JSON"),
+                React.createElement("button", { className: "btn-success small", onClick: () => exportCSV(activeAssets, activeScanData) }, "CSV")
+              )
+            )
+          ),
+
+          activeSummary && React.createElement(
+            "div", { className: "summary-row" },
+            React.createElement("div", { className: "summary-chip" },
+              React.createElement("b", null, activeAssets.length), "assets"
+            ),
+            Object.entries(activeSummary.by_type || {}).map(([k, v]) => React.createElement(
+              "div", { className: "summary-chip", key: k },
+              React.createElement("b", null, v), k
+            ))
+          ),
+
+          React.createElement(
+            "div", { className: "filter-bar" },
+            React.createElement("input", {
+              placeholder: "Search value…",
+              value: filters.search,
+              onChange: e => setFilters(f => ({ ...f, search: e.target.value }))
+            }),
+            React.createElement("select", {
+              value: filters.type,
+              onChange: e => setFilters(f => ({ ...f, type: e.target.value }))
+            },
+              React.createElement("option", { value: "" }, "All types"),
+              React.createElement("option", { value: "subdomain" }, "subdomain"),
+              React.createElement("option", { value: "ip" }, "ip"),
+              React.createElement("option", { value: "http_service" }, "http_service"),
+              React.createElement("option", { value: "open_port" }, "open_port"),
+              React.createElement("option", { value: "url" }, "url"),
+              React.createElement("option", { value: "js_file" }, "js_file"),
+              React.createElement("option", { value: "directory" }, "directory"),
+              React.createElement("option", { value: "finding" }, "finding"),
+              React.createElement("option", { value: "device" }, "device")
+            ),
+            React.createElement("input", {
+              placeholder: "Status code",
+              style: { width: 90 },
+              value: filters.status_code,
+              onChange: e => setFilters(f => ({ ...f, status_code: e.target.value }))
+            }),
+            React.createElement("input", {
+              placeholder: "Tech (nginx)",
+              value: filters.tech,
+              onChange: e => setFilters(f => ({ ...f, tech: e.target.value }))
+            }),
+            React.createElement("div", { className: "sep" }),
+            React.createElement("button", { className: "btn-ghost", onClick: () => activeScanId && fetchScanData(activeScanId) }, "Refresh")
+          ),
+
+          activeAssets.length > 0 && React.createElement(
+            "div", { className: "selection-bar" },
+            React.createElement("input", {
+              type: "checkbox",
+              checked: selectedAssets.size === activeAssets.length && activeAssets.length > 0,
+              onChange: toggleSelectAll
+            }),
+            React.createElement("span", { className: "count" },
+              `${selectedAssets.size} of ${activeAssets.length} selected`
+            ),
+            React.createElement("div", { className: "sep" }),
+            React.createElement(
+              "button", {
+                className: "btn",
+                onClick: runOnSelected,
+                disabled: selectedAssets.size === 0,
+                style: { fontSize: '11px', padding: '4px 16px' }
+              },
+              "▶ Run on Selected"
+            )
+          ),
+
+          React.createElement(
+            "table", null,
+            React.createElement(
+              "thead", null,
+              React.createElement("tr", null,
+                React.createElement("th", { style: { width: '40px' } },
+                  activeAssets.length > 0 && React.createElement("input", { type: "checkbox", checked: selectedAssets.size === activeAssets.length && activeAssets.length > 0, onChange: toggleSelectAll })
+                ),
+                React.createElement("th", null, "Type"),
+                React.createElement("th", null, "Value"),
+                React.createElement("th", null, "Source"),
+                React.createElement("th", null, "Details")
+              )
+            ),
+            React.createElement(
+              "tbody", null,
+              activeAssets.length > 0 ? activeAssets.map(a => React.createElement(AssetRow, {
+                a, key: a.id || `${a.type}:${a.value}`,
+                selected: selectedAssets.has(a.id),
+                onToggleSelect: toggleSelect,
+                onViewScreenshot: (asset) => setScreenshotAsset(asset)
+              })) :
+              React.createElement("tr", null,
+                React.createElement("td", { colSpan: "5", className: "empty-state" },
+                  activeScanData && activeScanData.status === "running" ? "Running recon chain…" :
+                  activeScanData && activeScanData.status === "completed" ? "No unique assets discovered" :
+                  "Run a new scan or load from history"
+                )
+              )
+            )
+          ),
+
+          screenshotAsset && React.createElement(ScreenshotModal, { asset: screenshotAsset, onClose: () => setScreenshotAsset(null) })
+        )
+      );
+    }
+
+    try {
+      window.__reconAppMounted = true;
+      ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App, null));
+    } catch (err) {
+      window.__reconAppMounted = false;
+      document.getElementById("root").innerHTML =
+        '<div style="font-family: monospace; color: #FF6B5D; padding: 40px;">' +
+        '<b>React failed to render.</b><br><br>' + (err && err.message ? err.message : String(err)) +
+        '</div>';
+      console.error(err);
+    }
+  </script>
+</body>
+</html>
