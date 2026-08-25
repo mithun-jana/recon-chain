@@ -1,0 +1,21 @@
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Runtime data that shouldn't be baked into the image - these get
+# recreated (and, if you use the volume, persisted) at container runtime.
+backend/recon.db
+backend/app/screenshots/
+backend/screenshots/
+backend/wordlists/uploads/
+wordlists/uploads/
+
+# VCS / editor / docs
+.git
+.gitignore
+.gitattributes
+.vscode
+.idea
+*.md
+!readme.md

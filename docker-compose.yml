@@ -1,0 +1,18 @@
+services:
+  recon-chain:
+    build: .
+    image: recon-chain:latest
+    container_name: recon-chain
+    ports:
+      - "8000:8000"   # backend API
+      - "8080:8080"   # frontend UI - open this in your browser
+    environment:
+      - RECON_API_KEY=${RECON_API_KEY:-}
+    volumes:
+      - recon_data:/app/data
+    cap_add:
+      - NET_RAW
+    restart: unless-stopped
+
+volumes:
+  recon_data:

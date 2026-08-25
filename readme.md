@@ -1,0 +1,41 @@
+Archive:  /mnt/user-data/outputs/recon-chain-v2.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  2026-08-19 11:27   recon-v2/
+        0  2026-08-19 11:24   recon-v2/frontend/
+    22955  2026-08-19 11:26   recon-v2/frontend/index.html
+        0  2026-08-19 11:28   recon-v2/backend/
+      172  2026-08-19 11:27   recon-v2/backend/requirements.txt
+        0  2026-08-19 11:28   recon-v2/backend/app/
+     6101  2026-08-19 11:23   recon-v2/backend/app/main.py
+     4998  2026-08-19 07:43   recon-v2/backend/app/scope.py
+        0  2026-08-19 07:42   recon-v2/backend/app/__init__.py
+      320  2026-08-19 11:23   recon-v2/backend/app/database.py
+     8923  2026-08-19 11:22   recon-v2/backend/app/orchestrator.py
+        0  2026-08-19 11:28   recon-v2/backend/app/tools/
+     3195  2026-08-19 07:45   recon-v2/backend/app/tools/katana_crawl.py
+     3959  2026-08-19 11:21   recon-v2/backend/app/tools/url_status_check.py
+     3418  2026-08-19 11:21   recon-v2/backend/app/tools/port_scan.py
+     3679  2026-08-19 07:47   recon-v2/backend/app/tools/dns_resolve.py
+     6931  2026-08-19 07:45   recon-v2/backend/app/tools/dir_fuzz.py
+     5110  2026-08-19 07:42   recon-v2/backend/app/tools/base.py
+        0  2026-08-19 07:42   recon-v2/backend/app/tools/__init__.py
+     4894  2026-08-19 07:46   recon-v2/backend/app/tools/nmap_enrich.py
+     2754  2026-08-19 11:21   recon-v2/backend/app/tools/tech_fingerprint.py
+     3938  2026-08-19 07:47   recon-v2/backend/app/tools/http_probe.py
+     1992  2026-08-19 11:21   recon-v2/backend/app/tools/screenshot.py
+     3151  2026-08-19 07:47   recon-v2/backend/app/tools/subdomain_enum.py
+     6335  2026-08-19 07:46   recon-v2/backend/app/tools/dns_permute.py
+     2390  2026-08-19 11:21   recon-v2/backend/app/tools/js_analysis.py
+     1966  2026-08-19 11:21   recon-v2/backend/app/tools/url_collect.py
+     6006  2026-08-19 07:43   recon-v2/backend/app/models.py
+     1883  2026-08-19 11:24   recon-v2/backend/app/wordlists.py
+        0  2026-08-19 11:24   recon-v2/backend/wordlists/
+        0  2026-08-19 11:28   recon-v2/backend/wordlists/uploads/
+        0  2026-08-19 11:28   recon-v2/backend/wordlists/uploads/.gitkeep
+     1786  2026-08-19 07:44   recon-v2/backend/wordlists/default.txt
+     9340  2026-08-19 11:27   recon-v2/README.md
+        0  2026-08-19 07:45   recon-v2/wordlists/
+        0  2026-08-19 07:45   recon-v2/wordlists/uploads/
+---------                     -------
+   116196                     36 files
