@@ -24,7 +24,7 @@ docker pull mithunjana/recon-chain:latest
 
 docker run -d --name recon-chain -p 8000:8000 -p 8080:8080 -v recon_data:/app/data --cap-add NET_RAW mithunjana/recon-chain:latest
 ```
-Windows-Specific Notes
+🪟 Windows-Specific Notes
 WSL2 Required: Docker Desktop on Windows uses WSL2 by default. Make sure WSL2 is installed
 ```bash
 # Run in PowerShell as Administrator
