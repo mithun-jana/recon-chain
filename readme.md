@@ -33,11 +33,11 @@ wsl --install
 ## 📸 Screenshots
 
 ### Interface
-![Interface](backend/screenshots/ui.png)
+![Interface](backend/screenshots/dashboard.png)
 ### scan
-![Fish Shell](backend/screenshots/uri.png)
-### screenshot
-![screenshot](backend/screenshots/screenshot.png)
+![Fish Shell](backend/screenshots/scan.png)
+### history
+![screenshot](backend/screenshots/history.png)
 ---
 ##  Features
 
@@ -73,7 +73,7 @@ docker compose up --build
 | subfinder, httpx, dnsx | subdomain enum / HTTP probing |
 | naabu, nmap | port scanning + service enrichment |
 | katana | crawling |
-| ffuf, feroxbuster | directory fuzzing |
+| feroxbuster, dirsearch | directory fuzzing |
 | gau | passive URL collection |
 | Playwright + Chromium | screenshots |
 
