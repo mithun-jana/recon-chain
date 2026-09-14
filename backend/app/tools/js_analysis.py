@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 import httpx
 
@@ -25,7 +25,7 @@ SECRET_PATTERNS = {
 NOISE_EXT = re.compile(r"\.(png|jpg|jpeg|gif|svg|css|woff2?)($|\?)")
 
 
-async def run(config: ScanConfig, js_urls: list[str]) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, js_urls: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     if not js_urls:
         return
     rate = RateLimiter(config.rate_limit_per_sec)
