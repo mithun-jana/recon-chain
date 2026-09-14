@@ -10,7 +10,7 @@ import socket
 from typing import AsyncIterator, Optional
 
 from app.models import ScanConfig
-from app.tools.base import ConcurrencyLimiter, RawResult
+from app.tools.base import ConcurrencyLimiter, RawResult, register_process, deregister_process
 
 
 MAX_CIDR_HOSTS = 1024
@@ -20,9 +20,7 @@ _PROBE_PORTS = (80, 443, 22, 445, 139, 3389, 135, 21, 23, 8080)
 
 
 def expand_cidr(target: str) -> list[str]:
-    """Return every usable host IP in a CIDR block. Falls back to
-    returning the target unchanged if it isn't valid CIDR notation (e.g.
-    it's already a bare single IP)."""
+
     target = target.strip()
     try:
         network = ipaddress.ip_network(target, strict=False)
@@ -39,18 +37,28 @@ def expand_cidr(target: str) -> list[str]:
     return hosts
 
 
-async def _icmp_ping(ip: str, timeout: float = 1.0) -> bool:
+async def _icmp_ping(ip: str, timeout: float = 1.0, scan_id: Optional[int] = None) -> bool:
     
+    proc = None
     try:
         proc = await asyncio.create_subprocess_exec(
             "ping", "-c", "1", "-W", str(max(int(timeout), 1)), ip,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
         )
+        register_process(scan_id, proc)
         returncode = await asyncio.wait_for(proc.wait(), timeout=timeout + 1)
         return returncode == 0
     except Exception:
+        if proc is not None and proc.returncode is None:
+            try:
+                proc.kill()
+            except ProcessLookupError:
+                pass
         return False
+    finally:
+        if proc is not None:
+            deregister_process(scan_id, proc)
 
 
 async def _tcp_probe(ip: str, timeout: float = 1.0) -> bool:
@@ -91,7 +99,7 @@ def _read_arp_entry(ip: str) -> Optional[str]:
     return None
 
 
-async def run(config: ScanConfig, targets: list[str]) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, targets: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     
     all_hosts: list[str] = []
     for t in targets:
@@ -106,7 +114,7 @@ async def run(config: ScanConfig, targets: list[str]) -> AsyncIterator[RawResult
 
     async def probe(ip: str):
         async with limiter:
-            ping_ok, tcp_ok = await asyncio.gather(_icmp_ping(ip), _tcp_probe(ip))
+            ping_ok, tcp_ok = await asyncio.gather(_icmp_ping(ip, scan_id=scan_id), _tcp_probe(ip))
       
             await asyncio.sleep(0.05)
             mac = await loop.run_in_executor(None, _read_arp_entry, ip)
