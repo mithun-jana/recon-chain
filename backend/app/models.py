@@ -3,10 +3,12 @@ Core data models.
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from enum import Enum
 from typing import Optional
 
+from pydantic import field_validator
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel
 
@@ -32,7 +34,7 @@ class Stage(str, Enum):
 
 STAGE_DEPENDENCIES: dict[Stage, list[Stage]] = {
     Stage.subdomain_enum: [],
-    Stage.http_probe: [Stage.subdomain_enum],
+    Stage.http_probe: [],
     Stage.port_scan: [Stage.subdomain_enum],
     Stage.screenshot: [Stage.http_probe],
     Stage.url_collect: [Stage.http_probe],
@@ -57,6 +59,14 @@ class ScanStatus(str, Enum):
     failed = "failed"
 
 
+class FuzzEngine(str, Enum):
+    auto = "auto"
+    ffuf = "ffuf"
+    feroxbuster = "feroxbuster"
+    dirsearch = "dirsearch"
+    python = "python"
+
+
 class ScanConfig(SQLModel):
     target: str
     scope_mode: ScopeMode = ScopeMode.wildcard
@@ -69,11 +79,20 @@ class ScanConfig(SQLModel):
     max_concurrency: int = 40
     wordlist_id: Optional[str] = None
     fuzz_extensions: list[str] = Field(default_factory=list)
+    fuzz_engine: FuzzEngine = FuzzEngine.auto
+
+
+class Project(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True, unique=True)
+    description: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class Scan(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: Optional[str] = None  # <-- ADD THIS
+    project_id: Optional[int] = Field(default=None, foreign_key="project.id", index=True)
+    name: Optional[str] = None
     target: str
     scope_mode: ScopeMode
     config_json: dict = Field(sa_column=Column(JSON))
@@ -82,6 +101,9 @@ class Scan(SQLModel, table=True):
     finished_at: Optional[datetime] = None
     error: Optional[str] = None
     asset_count: int = 0
+
+    # NEW: JSON-encoded list of stage ids, e.g. '["subdomain_enum", "http_probe"]'
+    enabled_stages: Optional[str] = Field(default=None)
 
 
 class AssetType(str, Enum):
@@ -117,3 +139,30 @@ class Wordlist(SQLModel, table=True):
     original_filename: str
     line_count: int
     uploaded_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ScanRead(SQLModel):
+    """Response shape for scan endpoints — decodes enabled_stages into a list."""
+    id: int
+    project_id: Optional[int] = None
+    name: Optional[str] = None
+    target: str
+    scope_mode: ScopeMode
+    status: ScanStatus
+    created_at: datetime
+    finished_at: Optional[datetime] = None
+    error: Optional[str] = None
+    asset_count: int = 0
+    enabled_stages: Optional[list[str]] = None
+
+    @field_validator("enabled_stages", mode="before")
+    @classmethod
+    def _parse_stages(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except Exception:
+                return []
+        return list(v)
