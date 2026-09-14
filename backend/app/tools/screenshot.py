@@ -9,10 +9,10 @@ import functools
 import hashlib
 import os
 import subprocess
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 from app.models import ScanConfig
-from app.tools.base import RawResult
+from app.tools.base import RawResult, register_process, deregister_process
 
 
 SCREENSHOT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "screenshots")
@@ -66,7 +66,7 @@ def _supports_ignore_https_errors() -> bool:
         return False
 
 
-async def _via_cli(url: str, output_path: str) -> tuple[bool, int, str]:
+async def _via_cli(url: str, output_path: str, scan_id: Optional[int] = None) -> tuple[bool, int, str]:
     """
     Take a screenshot using Playwright CLI.
     """
@@ -97,7 +97,11 @@ async def _via_cli(url: str, output_path: str) -> tuple[bool, int, str]:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout_sec + 10)
+        register_process(scan_id, proc)
+        try:
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout_sec + 10)
+        finally:
+            deregister_process(scan_id, proc)
         if proc.returncode == 0:
             print(f"[Screenshot]  Saved: {output_path}")
             return True, 200, ""
@@ -140,7 +144,7 @@ async def _via_python(url: str, output_path: str) -> tuple[bool, int, str]:
             await browser.close()
 
 
-async def run(config: ScanConfig, urls: list[str]) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, urls: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     """
     Takes screenshots of provided URLs using Playwright CLI 
     """
@@ -169,7 +173,7 @@ async def run(config: ScanConfig, urls: list[str]) -> AsyncIterator[RawResult]:
 
             source = "playwright-cli"
             if cli_installed:
-                success, status_code, error = await _via_cli(url, path)
+                success, status_code, error = await _via_cli(url, path, scan_id=scan_id)
                 if not success:
                     # CLI failed - retry once via the Python API, which can
                     # handle cert errors and gives us finer timeout control.
