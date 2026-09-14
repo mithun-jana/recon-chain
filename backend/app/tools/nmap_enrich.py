@@ -6,10 +6,10 @@ from __future__ import annotations
 import asyncio
 import re
 import xml.etree.ElementTree as ET
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 from app.models import ScanConfig
-from app.tools.base import ConcurrencyLimiter, RawResult, which
+from app.tools.base import ConcurrencyLimiter, RawResult, which, register_process, deregister_process
 
 
 BANNER_PATTERNS = [
@@ -68,7 +68,7 @@ async def _via_python(open_ports: list[tuple[str, int]], concurrency: int) -> As
             yield result
 
 
-async def _via_nmap(open_ports: list[tuple[str, int]]) -> AsyncIterator[RawResult]:
+async def _via_nmap(open_ports: list[tuple[str, int]], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     by_ip: dict[str, list[int]] = {}
     for ip, port in open_ports:
         by_ip.setdefault(ip, []).append(port)
@@ -79,7 +79,11 @@ async def _via_nmap(open_ports: list[tuple[str, int]]) -> AsyncIterator[RawResul
             "nmap", "-sV", "--version-light", "-p", port_arg, "-oX", "-", ip,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
         )
-        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=180)
+        register_process(scan_id, proc)
+        try:
+            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=180)
+        finally:
+            deregister_process(scan_id, proc)
         try:
             root = ET.fromstring(stdout.decode(errors="ignore"))
         except ET.ParseError:
@@ -103,13 +107,13 @@ async def _via_nmap(open_ports: list[tuple[str, int]]) -> AsyncIterator[RawResul
                 )
 
 
-async def run(config: ScanConfig, open_ports: list[tuple[str, int]]) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, open_ports: list[tuple[str, int]], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     if not open_ports:
         return
     if which("nmap"):
         try:
             got_any = False
-            async for r in _via_nmap(open_ports):
+            async for r in _via_nmap(open_ports, scan_id=scan_id):
                 got_any = True
                 yield r
             if got_any:
