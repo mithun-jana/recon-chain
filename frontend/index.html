@@ -10,78 +10,47 @@
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: #f6f8fa;
+      background: #f4f6f5;
       color: #1e2b34;
-      transition: background 0.25s ease, color 0.2s ease;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
+    body.dark { background: #12191b; color: #dce6e2; }
 
-    body.dark {
-      background: #161c1e;
-      color: #dce6e2;
-    }
+    ::selection { background: #ffb00055; color: #0b1210; }
 
-    ::selection {
-      background: #ffb00055;
-      color: #0b1210;
-    }
+    #root { min-height: 100vh; }
 
-    #root {
-      min-height: 100vh;
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cdd9d4;
-      border-radius: 20px;
-    }
-    body.dark ::-webkit-scrollbar-thumb {
-      background: #364a44;
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cdd9d4; border-radius: 20px; }
+    body.dark ::-webkit-scrollbar-thumb { background: #364a44; }
 
     .app {
       display: grid;
       grid-template-columns: 340px 1fr;
       min-height: 100vh;
-      transition: background 0.2s;
     }
-    @media (max-width: 900px) {
-      .app {
-        grid-template-columns: 1fr;
-      }
-    }
+    @media (max-width: 900px) { .app { grid-template-columns: 1fr; } }
 
     .sidebar {
-      background: rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border-right: 1px solid rgba(0, 0, 0, 0.06);
+      background: #ffffff;
+      border-right: 1px solid #e3eae6;
       padding: 28px 24px;
       display: flex;
       flex-direction: column;
-      gap: 28px;
+      gap: 24px;
       overflow-y: auto;
       max-height: 100vh;
-      transition: background 0.2s, border-color 0.2s;
     }
     body.dark .sidebar {
-      background: rgba(26, 34, 36, 0.85);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border-right: 1px solid rgba(255, 255, 255, 0.04);
+      background: #1a2224;
+      border-right-color: #24383a;
     }
 
     .brand {
@@ -104,284 +73,222 @@
       font-weight: 500;
       letter-spacing: 0.6px;
       text-transform: uppercase;
-      color: #6b7f78;
-    }
-    body.dark .brand-sub {
-      color: #8fa39b;
+      color: #7a8f88;
     }
 
-    .theme-toggle {
-      margin-left: auto;
-      background: rgba(0, 0, 0, 0.04);
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      border-radius: 40px;
-      padding: 4px 8px;
+    .theme-switch {
       display: flex;
       align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-      transition: 0.15s;
+      gap: 8px;
+      margin-left: auto;
     }
-    body.dark .theme-toggle {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.08);
-    }
-    .theme-toggle span {
-      font-size: 14px;
+    .theme-switch .label {
+      font-size: 12px;
       font-weight: 500;
-      color: #1e2b34;
+      color: #7a8f88;
     }
-    body.dark .theme-toggle span {
-      color: #cdd9d4;
+    .toggle-track {
+      width: 44px;
+      height: 24px;
+      background: #e3eae6;
+      border-radius: 40px;
+      position: relative;
+      cursor: pointer;
     }
+    body.dark .toggle-track { background: #2f3f3f; }
+    .toggle-track .thumb {
+      width: 20px;
+      height: 20px;
+      background: #ffffff;
+      border-radius: 40px;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s, background 0.2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+    body.dark .toggle-track .thumb { left: 22px; background: #ffb000; }
 
-    .field {
-      margin-bottom: 18px;
-    }
+    .field { margin-bottom: 18px; }
     .field label {
       display: block;
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: #5f7470;
+      color: #7a8f88;
       margin-bottom: 5px;
-    }
-    body.dark .field label {
-      color: #8fa39b;
     }
 
     input[type="text"],
     input[type="password"],
     select {
       width: 100%;
-      background: #ffffff;
-      border: 1px solid #dbe3e0;
+      background: #f4f6f5;
+      border: 1px solid #dfe6e2;
       color: #1e2b34;
       padding: 10px 12px;
-      border-radius: 12px;
+      border-radius: 10px;
       font-size: 14px;
       font-family: 'Inter', sans-serif;
-      transition: 0.15s;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+      transition: border-color 0.12s, box-shadow 0.12s;
     }
     body.dark input[type="text"],
     body.dark input[type="password"],
     body.dark select {
-      background: #1e282b;
-      border-color: #2f3f3f;
+      background: #212e30;
+      border-color: #33484a;
       color: #dce6e2;
     }
     input:focus,
     select:focus {
       outline: none;
-      border-color: #ffb000;
-      box-shadow: 0 0 0 3px #ffb00033;
+      border-color: #2d3d42;
+      box-shadow: 0 0 0 3px rgba(45, 61, 66, 0.18);
+    }
+    body.dark input:focus,
+    body.dark select:focus {
+      border-color: #8fa39b;
+      box-shadow: 0 0 0 3px rgba(143, 163, 155, 0.20);
     }
 
     .scope-tabs {
       display: flex;
       gap: 6px;
-      background: #f0f4f2;
-      border-radius: 16px;
+      background: #f4f6f5;
+      border: 1px solid #dfe6e2;
+      border-radius: 14px;
       padding: 4px;
     }
     body.dark .scope-tabs {
-      background: #1e282b;
+      background: #212e30;
+      border-color: #33484a;
     }
     .scope-tab {
       flex: 1;
       text-align: center;
       padding: 8px 6px;
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
       font-family: 'Inter', sans-serif;
-      color: #5f7470;
-      border-radius: 12px;
+      color: #7a8f88;
+      border-radius: 10px;
       cursor: pointer;
-      transition: 0.15s;
+      user-select: none;
+      transition: background 0.12s, color 0.12s;
     }
-    body.dark .scope-tab {
-      color: #8fa39b;
-    }
+    .scope-tab:hover:not(.active) { color: #1e2b34; }
+    body.dark .scope-tab:hover:not(.active) { color: #dce6e2; }
     .scope-tab.active {
-      background: #ffb000;
-      color: #0b1210;
-      box-shadow: 0 2px 6px #ffb00044;
+      background: #2d3d42;
+      color: #ffffff;
     }
     body.dark .scope-tab.active {
-      background: #ffb000;
-      color: #0b1210;
+      background: #3d4d52;
+      color: #ffffff;
     }
 
-    .chain {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
+    .chain { display: flex; flex-direction: column; gap: 2px; }
     .chain-title {
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      color: #5f7470;
+      color: #7a8f88;
       margin-bottom: 12px;
-    }
-    body.dark .chain-title {
-      color: #8fa39b;
     }
     .chain-node {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 10px 12px;
-      border-radius: 14px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: 0.15s;
       background: transparent;
+      transition: background 0.12s;
     }
-    .chain-node:hover {
-      background: rgba(0, 0, 0, 0.03);
-    }
-    body.dark .chain-node:hover {
-      background: rgba(255, 255, 255, 0.04);
-    }
-    .chain-node.disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
-    .chain-node.disabled:hover {
-      background: transparent;
-    }
+    .chain-node:hover { background: #f4f6f5; }
+    body.dark .chain-node:hover { background: #212e30; }
+    .chain-node.disabled { opacity: 0.35; cursor: not-allowed; }
+    .chain-node.disabled:hover { background: transparent; }
     .chain-link {
       width: 2px;
       height: 18px;
       margin-left: 18px;
-      background: #dbe3e0;
-      transition: 0.2s;
+      background: #dfe6e2;
     }
-    body.dark .chain-link {
-      background: #2f3f3f;
-    }
-    .chain-link.active {
-      background: #ffb000;
-    }
+    body.dark .chain-link { background: #33484a; }
+    .chain-link.active { background: #2d3d42; }
+    body.dark .chain-link.active { background: #8fa39b; }
     .chain-dot {
       width: 14px;
       height: 14px;
       border-radius: 40px;
-      border: 2px solid #dbe3e0;
-      background: #f0f4f2;
-      transition: 0.2s;
+      border: 2px solid #dfe6e2;
+      background: #ffffff;
       flex-shrink: 0;
     }
     body.dark .chain-dot {
-      border-color: #2f3f3f;
-      background: #1e282b;
+      border-color: #33484a;
+      background: #1a2224;
     }
     .chain-node.on .chain-dot {
-      border-color: #ffb000;
-      background: #ffb000;
-      box-shadow: 0 0 10px #ffb00066;
+      border-color: #2d3d42;
+      background: #2d3d42;
+    }
+    body.dark .chain-node.on .chain-dot {
+      border-color: #8fa39b;
+      background: #8fa39b;
     }
     .chain-label {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
-      font-weight: 450;
+      font-weight: 500;
     }
     .chain-hint {
       font-size: 10px;
-      color: #7c8f89;
+      color: #7a8f88;
       margin-left: auto;
-      background: rgba(0, 0, 0, 0.03);
+      background: #f4f6f5;
       padding: 2px 10px;
       border-radius: 30px;
     }
-    body.dark .chain-hint {
-      background: rgba(255, 255, 255, 0.04);
-      color: #8fa39b;
-    }
+    body.dark .chain-hint { background: #212e30; }
 
     .btn {
-      background: #ffb000;
-      color: #0b1210;
+      background: #2d3d42;
+      color: #ffffff;
       border: none;
       padding: 12px 20px;
       border-radius: 40px;
       font-weight: 600;
       font-size: 14px;
       cursor: pointer;
-      transition: 0.15s;
-      box-shadow: 0 4px 8px #ffb00033;
+      transition: background 0.12s;
       letter-spacing: 0.2px;
     }
-    .btn:hover {
-      background: #ffc433;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 14px #ffb00055;
-    }
+    .btn:hover:not(:disabled) { background: #3d4d52; }
+    .btn:active:not(:disabled) { background: #223136; }
     .btn:disabled {
-      background: #dbe3e0;
-      color: #7c8f89;
-      box-shadow: none;
-      transform: none;
+      background: #e3eae6;
+      color: #98a8a3;
       cursor: not-allowed;
     }
-    body.dark .btn:disabled {
-      background: #2f3f3f;
-      color: #5f7470;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid #dbe3e0;
-      color: #5f7470;
-      padding: 6px 14px;
-      border-radius: 30px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: 0.1s;
-    }
-    body.dark .btn-ghost {
-      border-color: #2f3f3f;
-      color: #8fa39b;
-    }
-    .btn-ghost:hover {
-      background: rgba(0, 0, 0, 0.06);
-      border-color: #8fae9d;
-      color: #2f5147;
-    }
-    .btn-ghost:active {
-      transform: scale(0.96);
-      background: rgba(0, 0, 0, 0.1);
-    }
-    body.dark .btn-ghost:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: #6b8a80;
-      color: #d4e6df;
-    }
-    body.dark .btn-ghost:active {
-      transform: scale(0.96);
-      background: rgba(255, 255, 255, 0.12);
-    }
+    body.dark .btn:disabled { background: #2f3f3f; color: #5f7470; }
 
     .btn-danger {
       background: #ff6b5d;
-      color: #fff;
+      color: #ffffff;
       border: none;
       padding: 8px 16px;
       border-radius: 40px;
       font-weight: 600;
       font-size: 12px;
       cursor: pointer;
-      transition: 0.15s;
     }
-    .btn-danger:hover {
-      background: #ff4433;
-    }
+    .btn-danger:hover { background: #ff4433; }
+    .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
     .btn-success {
       background: #2dd4a7;
       color: #0b1210;
@@ -391,69 +298,58 @@
       font-weight: 600;
       font-size: 12px;
       cursor: pointer;
-      transition: 0.15s;
     }
-    .btn-success:hover {
-      opacity: 0.8;
+    .btn-success:hover { background: #24b78f; }
+
+    .btn-ghost {
+      background: #ffffff;
+      border: 1px solid #dfe6e2;
+      color: #5f7470;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.12s, color 0.12s, background 0.12s;
+    }
+    body.dark .btn-ghost {
+      background: #212e30;
+      border-color: #33484a;
+      color: #8fa39b;
+    }
+    .btn-ghost:hover {
+      border-color: #2d3d42;
+      color: #2d3d42;
+      background: #eef3f0;
+    }
+    body.dark .btn-ghost:hover {
+      border-color: #8fa39b;
+      color: #dce6e2;
+      background: #2a3a3c;
     }
 
-    .history-panel {
-      background: rgba(255, 255, 255, 0.5);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      border: 1px solid rgba(0, 0, 0, 0.04);
-      border-radius: 20px;
-      padding: 8px 10px;
-      max-height: 220px;
-      overflow-y: auto;
-    }
-    body.dark .history-panel {
-      background: rgba(30, 40, 43, 0.7);
-      border-color: rgba(255, 255, 255, 0.04);
-    }
-    .history-item {
+    .wordlist-browse-btn {
+      width: 100%;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 8px 6px;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: 0.1s;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-style: dashed;
+      border-width: 1.5px;
     }
-    .history-item:hover {
-      background: rgba(0, 0, 0, 0.03);
+    .wordlist-spinner {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      display: inline-block;
+      animation: wordlistSpin 0.7s linear infinite;
     }
-    body.dark .history-item:hover {
-      background: rgba(255, 255, 255, 0.04);
-    }
-    .history-item .target {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .history-item .meta {
-      font-size: 10px;
-      color: #7c8f89;
-    }
-    .history-item .status {
-      font-size: 10px;
-      padding: 2px 10px;
-      border-radius: 40px;
-      font-weight: 500;
-      background: rgba(0, 0, 0, 0.04);
-    }
-    body.dark .history-item .status {
-      background: rgba(255, 255, 255, 0.06);
-    }
-    .history-item .status.completed {
-      color: #2dd4a7;
-    }
-    .history-item .status.running {
-      color: #ffb000;
-    }
-    .history-item .status.failed {
-      color: #ff6b5d;
-    }
+    @keyframes wordlistSpin { to { transform: rotate(360deg); } }
 
     .main {
       padding: 28px 32px;
@@ -463,11 +359,8 @@
       overflow-y: auto;
       max-height: 100vh;
       background: #ffffff;
-      transition: background 0.2s;
     }
-    body.dark .main {
-      background: #161c1e;
-    }
+    body.dark .main { background: #12191b; }
 
     .topbar {
       display: flex;
@@ -482,76 +375,104 @@
       font-size: 11px;
       padding: 5px 16px;
       border-radius: 40px;
-      background: rgba(0, 0, 0, 0.03);
-      border: 1px solid #dbe3e0;
+      background: #f4f6f5;
+      border: 1px solid #dfe6e2;
       text-transform: uppercase;
       letter-spacing: 0.4px;
+      color: #7a8f88;
     }
     body.dark .status-pill {
-      background: rgba(255, 255, 255, 0.04);
-      border-color: #2f3f3f;
+      background: #212e30;
+      border-color: #33484a;
     }
     .status-pill.completed {
-      color: #2dd4a7;
+      color: #1ba87f;
       border-color: #2dd4a7;
+      background: #e6f9f3;
+    }
+    body.dark .status-pill.completed {
+      background: #1e3833;
+      color: #4ddbb5;
     }
     .status-pill.running {
-      color: #ffb000;
-      border-color: #ffb000;
+      color: #4a5d63;
+      border-color: #8fa39b;
+      background: #eef3f0;
       animation: pulse 1.5s infinite;
     }
+    body.dark .status-pill.running {
+      background: #2a3a3c;
+      color: #c4d6d0;
+      border-color: #8fa39b;
+    }
     .status-pill.failed {
-      color: #ff6b5d;
+      color: #d9433a;
       border-color: #ff6b5d;
+      background: #ffe6e3;
     }
-
+    body.dark .status-pill.failed {
+      background: #2e1a18;
+      color: #ff8a7a;
+    }
     @keyframes pulse {
-      0%,
-      100% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.3;
-      }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
     }
 
-    .summary-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .fuzz-progress { max-width: 420px; }
+    .fuzz-progress-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #7a8f88;
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+    .fuzz-progress-track {
+      height: 6px;
+      border-radius: 6px;
+      background: #e3eae6;
+      overflow: hidden;
+    }
+    body.dark .fuzz-progress-track { background: #2f3f3f; }
+    .fuzz-progress-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: #ffb000;
+      transition: width 0.4s ease-out;
+    }
+
+    .summary-row { display: flex; flex-wrap: wrap; gap: 8px; }
     .summary-chip {
-      background: rgba(0, 0, 0, 0.02);
-      border: 1px solid #eef3f0;
+      background: #f4f6f5;
+      border: 1px solid #dfe6e2;
       border-radius: 40px;
       padding: 6px 16px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
+      color: #5f7470;
     }
     body.dark .summary-chip {
-      background: rgba(255, 255, 255, 0.03);
-      border-color: #263537;
+      background: #212e30;
+      border-color: #33484a;
+      color: #a3b5ad;
     }
-    .summary-chip b {
-      color: #ffb000;
-      font-size: 15px;
-      margin-right: 6px;
-    }
+    .summary-chip b { color: #ffb000; font-size: 15px; margin-right: 6px; }
 
     .filter-bar {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
-      background: rgba(0, 0, 0, 0.02);
-      border: 1px solid #eef3f0;
+      background: #ffffff;
+      border: 1px solid #dfe6e2;
       padding: 12px 16px;
-      border-radius: 30px;
-      transition: 0.2s;
+      border-radius: 24px;
     }
     body.dark .filter-bar {
-      background: rgba(255, 255, 255, 0.02);
-      border-color: #263537;
+      background: #1a2224;
+      border-color: #24383a;
     }
     .filter-bar input,
     .filter-bar select {
@@ -560,24 +481,171 @@
       font-size: 12px;
       padding: 8px 12px;
       border-radius: 40px;
-      background: #ffffff;
-      border: 1px solid #dbe3e0;
+      background: #f4f6f5;
+      border: 1px solid #dfe6e2;
       color: #1e2b34;
     }
     body.dark .filter-bar input,
     body.dark .filter-bar select {
-      background: #1e282b;
-      border-color: #2f3f3f;
+      background: #212e30;
+      border-color: #33484a;
       color: #dce6e2;
+    }
+    .filter-bar input:focus,
+    .filter-bar select:focus {
+      outline: none;
+      border-color: #2d3d42;
+      box-shadow: 0 0 0 3px rgba(45, 61, 66, 0.18);
+    }
+    body.dark .filter-bar input:focus,
+    body.dark .filter-bar select:focus {
+      border-color: #8fa39b;
+      box-shadow: 0 0 0 3px rgba(143, 163, 155, 0.20);
     }
     .filter-bar .sep {
       width: 1px;
       height: 28px;
-      background: #dbe3e0;
+      background: #e3eae6;
     }
-    body.dark .filter-bar .sep {
-      background: #2f3f3f;
+    body.dark .filter-bar .sep { background: #33484a; }
+
+    .project-picker {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 4px 3px 10px;
+      background: #ffffff;
+      border: 1px solid #dfe6e2;
+      border-radius: 40px;
     }
+    body.dark .project-picker {
+      background: #212e30;
+      border-color: #33484a;
+    }
+    .project-picker:hover { border-color: #2d3d42; }
+    body.dark .project-picker:hover { border-color: #8fa39b; }
+    .project-picker .pp-icon { font-size: 12px; opacity: 0.7; }
+    .project-picker select {
+      border: none;
+      background: transparent;
+      color: #1e2b34;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      cursor: pointer;
+      max-width: 130px;
+      padding: 4px 2px;
+      box-shadow: none;
+    }
+    body.dark .project-picker select { color: #dce6e2; }
+    .project-picker select:focus { box-shadow: none; }
+    .project-picker .pp-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: none;
+      background: #f4f6f5;
+      color: #5f7470;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    body.dark .project-picker .pp-btn {
+      background: #2a3a3c;
+      color: #8fa39b;
+    }
+    .project-picker .pp-btn:hover { background: #2d3d42; color: #ffffff; }
+    .project-picker .pp-btn.danger:hover { background: #ff6b5d; color: #ffffff; }
+
+    .stepper {
+      display: inline-flex;
+      align-items: center;
+      background: #f4f6f5;
+      border: 1px solid #dfe6e2;
+      border-radius: 40px;
+      overflow: hidden;
+      width: auto;
+      max-width: fit-content;
+    }
+    body.dark .stepper {
+      background: #212e30;
+      border-color: #33484a;
+    }
+
+    .thread-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      width: auto;
+      flex: 0 0 auto;
+    }
+    .thread-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      color: #7a8f88;
+      white-space: nowrap;
+    }
+    .step-value {
+      width: 48px !important;
+      min-width: 32px !important;
+      max-width: 48px !important;
+      height: 30px !important;
+      flex: 0 0 48px !important;
+      border: none;
+      background: transparent;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffb000 !important;
+      -webkit-text-fill-color: #ffb000 !important;
+      outline: none;
+      padding: 0;
+      -moz-appearance: textfield;
+      appearance: textfield;
+      caret-color: #ffb000;
+    }
+    .step-value:focus {
+      background: transparent;
+      color: #ffb000 !important;
+      -webkit-text-fill-color: #ffb000 !important;
+    }
+    body.dark .step-value:focus {
+      background: transparent;
+      color: #ffb000 !important;
+      -webkit-text-fill-color: #ffb000 !important;
+    }
+    .step-value::-webkit-outer-spin-button,
+    .step-value::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .step-btn {
+      width: 28px;
+      height: 30px;
+      flex: 0 0 28px;
+      border: none;
+      background: transparent;
+      color: #7a8f88;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      font-family: 'Inter', sans-serif;
+      line-height: 1;
+    }
+    .step-btn:hover { background: #e3eae6; color: #1e2b34; }
+    body.dark .step-btn:hover { background: #2a3a3c; color: #dce6e2; }
 
     table {
       width: 100%;
@@ -589,32 +657,31 @@
     thead th {
       text-align: left;
       padding: 8px 12px;
-      color: #5f7470;
+      color: #7a8f88;
       font-weight: 600;
       font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.6px;
     }
-    body.dark thead th {
-      color: #8fa39b;
-    }
     tbody td {
       padding: 12px 12px;
-      background: rgba(0, 0, 0, 0.01);
-      border-radius: 16px;
+      background: #f9fbfa;
+      border: 1px solid #eef3f0;
+      border-radius: 12px;
       vertical-align: middle;
+      contain: layout style paint;
     }
     body.dark tbody td {
-      background: rgba(255, 255, 255, 0.02);
-    }
-    tbody tr {
-      transition: 0.1s;
+      background: #1a2224;
+      border-color: #24383a;
     }
     tbody tr:hover td {
-      background: rgba(0, 0, 0, 0.03);
+      background: #eef3f0;
+      border-color: #d4e0da;
     }
     body.dark tbody tr:hover td {
-      background: rgba(255, 255, 255, 0.04);
+      background: #212e30;
+      border-color: #33484a;
     }
 
     .badge {
@@ -622,56 +689,118 @@
       padding: 3px 10px;
       border-radius: 30px;
       font-size: 10px;
-      font-weight: 500;
-      border: 1px solid #eef3f0;
+      font-weight: 600;
+      border: 1px solid #dfe6e2;
       margin: 1px 4px 1px 0;
-      background: #ffffff;
+      background: #f4f6f5;
+      color: #5f7470;
     }
     body.dark .badge {
-      border-color: #263537;
-      background: transparent;
+      border-color: #33484a;
+      background: #212e30;
+      color: #8fa39b;
     }
+
     .badge.type-http_service {
-      color: #2dd4a7;
-      border-color: #2dd4a7;
+      color: #1ba87f;
+      border-color: #a8e6d4;
+      background: #e6f9f3;
+    }
+    body.dark .badge.type-http_service {
+      color: #4ddbb5;
+      border-color: #1e3833;
+      background: #1e3833;
     }
     .badge.type-subdomain {
-      color: #ffb000;
-      border-color: #ffb000;
+      color: #4a5d63;
+      border-color: #c4d6d0;
+      background: #eef3f0;
+    }
+    body.dark .badge.type-subdomain {
+      color: #c4d6d0;
+      border-color: #3a4a4c;
+      background: #2a3a3c;
     }
     .badge.type-open_port {
-      color: #ff9d5c;
-      border-color: #ff9d5c;
+      color: #c76e2e;
+      border-color: #ffc9a8;
+      background: #ffede0;
+    }
+    body.dark .badge.type-open_port {
+      color: #ffb17d;
+      border-color: #4a2e1a;
+      background: #2e1f12;
     }
     .badge.type-js_file {
+      color: #7c3aed;
+      border-color: #d4b8f5;
+      background: #f2e8ff;
+    }
+    body.dark .badge.type-js_file {
       color: #c792ea;
-      border-color: #c792ea;
+      border-color: #3a2a4a;
+      background: #2a1f3a;
     }
     .badge.type-url {
-      color: #64b5f6;
-      border-color: #64b5f6;
+      color: #2563eb;
+      border-color: #bcd4f7;
+      background: #e8f0fe;
+    }
+    body.dark .badge.type-url {
+      color: #7cb0f7;
+      border-color: #1e3350;
+      background: #16233a;
     }
     .badge.type-directory {
-      color: #ba68c8;
-      border-color: #ba68c8;
+      color: #9333ea;
+      border-color: #d9b3ee;
+      background: #f4e8fc;
+    }
+    body.dark .badge.type-directory {
+      color: #c28ee8;
+      border-color: #3a234a;
+      background: #2a1a38;
     }
     .badge.type-finding {
-      color: #ffb74d;
-      border-color: #ffb74d;
+      color: #4a5d63;
+      border-color: #c4d6d0;
+      background: #eef3f0;
+    }
+    body.dark .badge.type-finding {
+      color: #c4d6d0;
+      border-color: #3a4a4c;
+      background: #2a3a3c;
     }
     .badge.type-device {
-      color: #66d9c4;
-      border-color: #66d9c4;
+      color: #0d9488;
+      border-color: #a7e0d7;
+      background: #e0f5f1;
     }
+    body.dark .badge.type-device {
+      color: #66d9c4;
+      border-color: #1e3a36;
+      background: #1a2e2a;
+    }
+
     .badge.sev-high {
-      background: #ff6b5d;
-      color: #0b1210;
-      border-color: #ff6b5d;
+      color: #d9433a;
+      border-color: #ff9a90;
+      background: #ffe6e3;
+    }
+    body.dark .badge.sev-high {
+      color: #ff8a7a;
+      border-color: #4a1e1a;
+      background: #2e1a18;
     }
     .badge.sev-medium {
-      background: #ffb000;
-      color: #0b1210;
-      border-color: #ffb000;
+      color: #4a5d63;
+      border-color: #c4d6d0;
+      background: #eef3f0;
+    }
+    body.dark .badge.sev-medium {
+      color: #c4d6d0;
+      border-color: #3a4a4c;
+      background: #2a3a3c;
     }
 
     .code-val {
@@ -679,13 +808,11 @@
       font-size: 12px;
       word-break: break-all;
     }
-    .muted {
-      color: #7c8f89;
-    }
+    .muted { color: #7a8f88; }
     .empty-state {
       text-align: center;
       padding: 60px 20px;
-      color: #7c8f89;
+      color: #7a8f88;
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
     }
@@ -695,34 +822,277 @@
       gap: 12px;
       align-items: center;
       padding: 10px 16px;
-      background: rgba(0, 0, 0, 0.02);
-      border: 1px solid #eef3f0;
-      border-radius: 40px;
+      background: #eef3f0;
+      border: 1px solid #d4e0da;
+      border-radius: 24px;
+      flex-wrap: wrap;
     }
     body.dark .selection-bar {
-      background: rgba(255, 255, 255, 0.02);
-      border-color: #263537;
+      background: #2a3a3c;
+      border-color: #3a4a4c;
     }
     .selection-bar .count {
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
+      color: #2d3d42;
+      font-weight: 600;
+    }
+    body.dark .selection-bar .count { color: #c4d6d0; }
+    .selection-bar .hint {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
       color: #5f7470;
+      font-style: italic;
     }
-    .selection-bar .sep {
-      width: 1px;
-      height: 24px;
-      background: #dbe3e0;
+    body.dark .selection-bar .hint { color: #8fa39b; }
+    .selection-bar .sep { width: 1px; height: 24px; background: #d4e0da; }
+    body.dark .selection-bar .sep { background: #3a4a4c; }
+
+    .projects-overview {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
     }
-    body.dark .selection-bar .sep {
-      background: #2f3f3f;
+
+    .projects-overview-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .projects-overview-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: #1e2b34;
+    }
+    body.dark .projects-overview-title { color: #dce6e2; }
+
+    .projects-overview-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #7a8f88;
+    }
+
+    .projects-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    .projects-toolbar-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #7a8f88;
+      font-weight: 600;
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .project-card {
+      position: relative;
+      padding: 16px 18px;
+      background: #f9fbfa;
+      border: 1px solid #eef3f0;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s, transform 0.12s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 130px;
+    }
+    body.dark .project-card {
+      background: #1a2224;
+      border-color: #24383a;
+    }
+    .project-card:hover {
+      border-color: #2d3d42;
+      background: #eef3f0;
+      transform: translateY(-2px);
+    }
+    body.dark .project-card:hover {
+      border-color: #8fa39b;
+      background: #212e30;
+    }
+
+    .project-card.selected-for-delete {
+      border-color: #ff6b5d;
+      background: rgba(255, 107, 93, 0.06);
+    }
+    body.dark .project-card.selected-for-delete {
+      background: rgba(255, 107, 93, 0.10);
+      border-color: #ff6b5d;
+    }
+
+    .project-card-check {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      width: 18px;
+      height: 18px;
+      accent-color: #ff6b5d;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .project-card-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .project-card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: #eef3f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    body.dark .project-card-icon { background: #2a3a3c; }
+
+    .project-card-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e2b34;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+    body.dark .project-card-name { color: #dce6e2; }
+
+    .project-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #7a8f88;
+    }
+
+    .project-card-stat b {
+      color: #2d3d42;
+      font-weight: 700;
+      margin-right: 3px;
+    }
+    body.dark .project-card-stat b { color: #c4d6d0; }
+
+    .project-card-stat.ok b { color: #1ba87f; }
+    body.dark .project-card-stat.ok b { color: #4ddbb5; }
+
+    .project-card-stat.bad b { color: #d9433a; }
+    body.dark .project-card-stat.bad b { color: #ff8a7a; }
+
+    .project-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 4px;
+    }
+
+    .project-card-last {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #7a8f88;
+      opacity: 0.85;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .project-card-footer .pc-action-btn {
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .project-card:hover .project-card-footer .pc-action-btn {
+      opacity: 1;
+    }
+
+    .pc-action-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      border: 1px solid #dfe6e2;
+      background: #ffffff;
+      color: #5f7470;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s;
+      padding: 0;
+      line-height: 1;
+    }
+    body.dark .pc-action-btn {
+      background: #212e30;
+      border-color: #33484a;
+      color: #8fa39b;
+    }
+    .pc-action-btn.danger:hover {
+      background: #ff6b5d;
+      color: #ffffff;
+      border-color: #ff6b5d;
+    }
+
+    .projects-empty {
+      padding: 60px 24px;
+      text-align: center;
+      border: 1px dashed #dfe6e2;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: #f9fbfa;
+    }
+    body.dark .projects-empty {
+      border-color: #33484a;
+      background: #1a2224;
+    }
+
+    .projects-empty-em { font-size: 38px; opacity: 0.7; }
+
+    .projects-empty-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e2b34;
+    }
+    body.dark .projects-empty-title { color: #dce6e2; }
+
+    .projects-empty-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #7a8f88;
+      margin-bottom: 8px;
     }
 
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.55);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -733,25 +1103,47 @@
       max-width: 90%;
       max-height: 90%;
       background: #ffffff;
-      border-radius: 32px;
+      border-radius: 24px;
       padding: 24px;
       position: relative;
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
     }
-    body.dark .modal-content {
-      background: #1e282b;
+    body.dark .modal-content { background: #1e282b; }
+    .prompt-card { width: 440px; max-width: 92vw; padding: 32px; }
+    .prompt-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      margin-bottom: 18px;
     }
-    .modal-content img {
-      max-width: 100%;
-      max-height: 70vh;
-      border-radius: 16px;
+    .prompt-card-input {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 15px;
+      padding: 13px 16px;
+      border-radius: 12px;
+      border: 1px solid #dfe6e2;
+      background: #f4f6f5;
+      outline: none;
+      transition: border-color 0.12s, box-shadow 0.12s;
+      color: #1e2b34;
     }
+    .prompt-card-input:focus {
+      border-color: #2d3d42;
+      box-shadow: 0 0 0 4px rgba(45, 61, 66, 0.18);
+    }
+    body.dark .prompt-card-input {
+      background: #212e30;
+      border-color: #33484a;
+      color: #e6efe9;
+    }
+    .modal-content img { max-width: 100%; max-height: 70vh; border-radius: 16px; }
     .modal-close {
       position: absolute;
       top: -12px;
       right: -12px;
       background: #ff6b5d;
-      color: #fff;
+      color: #ffffff;
       border: none;
       border-radius: 50%;
       width: 34px;
@@ -761,58 +1153,228 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(255, 107, 93, 0.3);
     }
-    .modal-close:hover {
-      background: #ff4433;
-    }
+    .modal-close:hover { background: #ff4433; }
 
-    .theme-switch {
+    .btn-success.small { font-size: 11px; padding: 4px 14px; }
+
+    .history-toggle-btn {
+      background: #ffffff;
+      border: 1px solid #dfe6e2;
+      color: #5f7470;
+      padding: 7px 14px;
+      border-radius: 40px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-left: auto;
+      gap: 6px;
+      white-space: nowrap;
+      transition: border-color 0.12s, color 0.12s, background 0.12s;
     }
-    .theme-switch .label {
-      font-size: 12px;
-      font-weight: 500;
-      color: #5f7470;
-    }
-    body.dark .theme-switch .label {
+    body.dark .history-toggle-btn {
+      background: #212e30;
+      border-color: #33484a;
       color: #8fa39b;
     }
-    .toggle-track {
-      width: 44px;
-      height: 24px;
-      background: #dbe3e0;
-      border-radius: 40px;
-      position: relative;
-      cursor: pointer;
-      transition: 0.2s;
+    .history-toggle-btn:hover {
+      border-color: #2d3d42;
+      color: #2d3d42;
+      background: #eef3f0;
     }
-    body.dark .toggle-track {
-      background: #2f3f3f;
+    body.dark .history-toggle-btn:hover {
+      border-color: #8fa39b;
+      color: #dce6e2;
+      background: #2a3a3c;
     }
-    .toggle-track .thumb {
-      width: 20px;
-      height: 20px;
-      background: white;
-      border-radius: 40px;
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      transition: 0.2s;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    .history-toggle-btn.active {
+      background: #2d3d42;
+      border-color: #2d3d42;
+      color: #ffffff;
     }
-    body.dark .toggle-track .thumb {
-      left: 22px;
-      background: #ffb000;
+    body.dark .history-toggle-btn.active {
+      background: #3d4d52;
+      border-color: #3d4d52;
+      color: #ffffff;
     }
 
-    .btn-success.small {
-      font-size: 11px;
-      padding: 4px 14px;
+    .history-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 380px;
+      max-width: 88vw;
+      background: #ffffff;
+      border-left: 1px solid #dfe6e2;
+      box-shadow: -16px 0 40px rgba(0, 0, 0, 0.12);
+      transform: translateX(105%);
+      transition: transform 0.22s ease-out;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
+    body.dark .history-drawer {
+      background: #1a2224;
+      border-left-color: #24383a;
+      box-shadow: -16px 0 40px rgba(0, 0, 0, 0.6);
+    }
+    .history-drawer.open { transform: translateX(0); }
+    .history-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 22px;
+      border-bottom: 1px solid #eef3f0;
+    }
+    body.dark .history-drawer-header { border-bottom-color: #24383a; }
+    .history-drawer-header h3 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      color: #1e2b34;
+    }
+    body.dark .history-drawer-header h3 { color: #dce6e2; }
+    .history-drawer-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid #dfe6e2;
+      background: #ffffff;
+      color: #5f7470;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    body.dark .history-drawer-close {
+      border-color: #33484a;
+      background: #212e30;
+      color: #8fa39b;
+    }
+    .history-drawer-close:hover {
+      background: #ff6b5d;
+      border-color: #ff6b5d;
+      color: #ffffff;
+    }
+    .history-drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .history-drawer-item {
+      padding: 14px 16px;
+      background: #f9fbfa;
+      border: 1px solid #eef3f0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    body.dark .history-drawer-item {
+      background: #212e30;
+      border-color: #24383a;
+    }
+    .history-drawer-item:hover {
+      border-color: #2d3d42;
+      background: #eef3f0;
+    }
+    body.dark .history-drawer-item:hover {
+      border-color: #8fa39b;
+      background: #2a3a3c;
+    }
+    .history-drawer-item .hd-target {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e2b34;
+      word-break: break-all;
+    }
+    body.dark .history-drawer-item .hd-target { color: #dce6e2; }
+    .history-drawer-item .hd-meta {
+      font-size: 10px;
+      color: #7a8f88;
+      margin-top: 4px;
+      display: flex;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .history-status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 30px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      border: 1px solid;
+      white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+    .history-status-badge.completed {
+      color: #1ba87f;
+      border-color: #a8e6d4;
+      background: #e6f9f3;
+    }
+    body.dark .history-status-badge.completed {
+      color: #4ddbb5;
+      border-color: #1e3833;
+      background: #1e3833;
+    }
+    .history-status-badge.running {
+      color: #b57a00;
+      border-color: #ffdf99;
+      background: #fff4d6;
+    }
+    body.dark .history-status-badge.running {
+      color: #ffb000;
+      border-color: #4a3d1a;
+      background: #2a2418;
+    }
+    .history-status-badge.failed {
+      color: #d9433a;
+      border-color: #ff9a90;
+      background: #ffe6e3;
+    }
+    body.dark .history-status-badge.failed {
+      color: #ff8a7a;
+      border-color: #4a1e1a;
+      background: #2e1a18;
+    }
+
+    .history-drawer-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #7a8f88;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.25);
+      z-index: 998;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+
+    .history-panel { display: none; }
   </style>
 </head>
 <body>
@@ -821,10 +1383,15 @@
     window.RECON_API_BASE = window.RECON_API_BASE ||
       (window.location.protocol + "//" + window.location.hostname + ":8000");
     const API = window.RECON_API_BASE;
-    // API key removed — all requests go without Authorization header
 
     async function apiFetch(url, options = {}) {
       return fetch(url, { ...options });
+    }
+
+    function haptic(ms = 10) {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try { navigator.vibrate(ms); } catch (e) { /* no-op */ }
+      }
     }
 
     const STAGES = [
@@ -853,10 +1420,59 @@
       return `${shortFirst} +${parts.length - 1}`;
     };
 
-    
+    /* Map a recon stage id to an asset badge type so scan-history chips
+       reuse the exact same colour palette as the asset table. */
+    const stageBadgeType = (stage) => {
+      switch (stage) {
+        case "subdomain_enum": return "subdomain";
+        case "http_probe":     return "http_service";
+        case "port_scan":      return "open_port";
+        case "dir_fuzz":       return "directory";
+        case "url_collect":    return "url";
+        case "katana_crawl":   return "url";
+        case "js_analysis":    return "js_file";
+        case "screenshot":     return "finding";
+        case "device_scan":    return "device";
+        default:               return "url";
+      }
+    };
+
+    const formatTime = (iso) => {
+      if (!iso) return "—";
+      try {
+        let d;
+        if (typeof iso === "number") {
+          d = new Date(iso);
+        } else {
+          let s = String(iso).trim();
+          if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(s)) {
+            s = s.replace(" ", "T") + "Z";
+          }
+          d = new Date(s);
+        }
+        if (isNaN(d.getTime())) return String(iso);
+
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        const datePart = d.toLocaleDateString(undefined, {
+          timeZone: tz,
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+        const timePart = d.toLocaleTimeString(undefined, {
+          timeZone: tz,
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return `${datePart}, ${timePart}`;
+      } catch {
+        return String(iso);
+      }
+    };
+
     const { useState, useEffect, useRef } = React;
 
-    
     function StageChain({ enabled, scopeMode, onToggle }) {
       const CIDR_STAGES = new Set(["device_scan", "port_scan"]);
       return React.createElement(
@@ -875,11 +1491,7 @@
             React.createElement(
               "div", {
                 className: `chain-node ${on ? "on" : ""} ${disabled ? "disabled" : ""}`,
-                onClick: () => !disabled && onToggle(s.id),
-                title: disabled ?
-                  (scopeMode === "cidr" ? "CIDR scope only scans devices/ports/services" :
-                    " CIDR scope ") :
-                  ""
+                onClick: () => !disabled && onToggle(s.id)
               },
               React.createElement("div", { className: "chain-dot" }),
               React.createElement("div", { className: "chain-label" }, s.label),
@@ -893,6 +1505,7 @@
     function WordlistUpload({ config, setConfig }) {
       const [uploading, setUploading] = useState(false);
       const [uploadedName, setUploadedName] = useState(config.wordlistName || null);
+      const fileInputRef = useRef(null);
       const handleFile = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -910,6 +1523,7 @@
       const clearWordlist = () => {
         setConfig(c => ({ ...c, wordlist_id: null, wordlistName: null }));
         setUploadedName(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
       };
       return React.createElement(
         "div", { className: "field" },
@@ -917,22 +1531,124 @@
         uploadedName ? React.createElement(
           "div", { style: { display: "flex", alignItems: "center", gap: 8 } },
           React.createElement("div", { className: "muted", style: { fontSize: 12, flex: 1 } }, uploadedName),
-          React.createElement("button", { className: "btn-ghost", onClick: clearWordlist }, "Use default")
+          React.createElement("button", { className: "btn-ghost", onClick: () => { haptic(); clearWordlist(); } }, "Use default")
         ) : React.createElement(
           React.Fragment, null,
           React.createElement("input", {
+            ref: fileInputRef,
             type: "file", accept: ".txt", onChange: handleFile, disabled: uploading,
-            style: { fontSize: 12, padding: "6px 0" }
+            style: { display: "none" }
           }),
-          React.createElement("div", { className: "muted", style: { fontSize: 11, marginTop: 4 } },
-            uploading ? "Uploading…" : "No file selected — bundled default will be used"
+          React.createElement(
+            "button", {
+              className: "btn-ghost wordlist-browse-btn",
+              onClick: () => { haptic(); fileInputRef.current && fileInputRef.current.click(); },
+              disabled: uploading
+            },
+            uploading
+              ? React.createElement(React.Fragment, null, React.createElement("span", { className: "wordlist-spinner" }), "Uploading…")
+              : React.createElement(React.Fragment, null, "📥 Browse wordlist…")
+          ),
+          React.createElement("div", { className: "muted", style: { fontSize: 11, marginTop: 6 } },
+            "No file selected — bundled default will be used"
           )
         )
       );
     }
 
-    function Sidebar({ config, setConfig, onRun, running, history, onLoadHistory, onClearHistory, darkMode, setDarkMode }) {
+    function ThreadStepper({ value, onChange }) {
+      const repeatRef = useRef(null);
+      const timeoutRef = useRef(null);
+
+      const step = (delta) => {
+        const next = Math.max(0, Math.min(100, (value ?? 15) + delta));
+        onChange(next);
+      };
+
+      const startRepeat = (delta) => {
+        haptic(6);
+        step(delta);
+        let count = 0;
+        timeoutRef.current = setTimeout(() => {
+          repeatRef.current = setInterval(() => {
+            count++;
+            step(delta);
+            if (count === 20) {
+              clearInterval(repeatRef.current);
+              repeatRef.current = setInterval(() => step(delta), 40);
+            }
+          }, 120);
+        }, 350);
+      };
+
+      const stopRepeat = () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (repeatRef.current) clearInterval(repeatRef.current);
+        timeoutRef.current = null;
+        repeatRef.current = null;
+      };
+
+      useEffect(() => () => stopRepeat(), []);
+
+      return React.createElement(
+        "div", { className: "thread-control", title: "Threads used by ffuf / feroxbuster / dirsearch / python fuzzer" },
+        React.createElement("span", { className: "thread-label" }, "FUZZ-Thread"),
+        React.createElement(
+          "div", { className: "stepper" },
+          React.createElement(
+            "button", {
+              className: "step-btn",
+              onClick: () => { haptic(6); step(-1); },
+              onMouseDown: () => startRepeat(-1),
+              onMouseUp: stopRepeat,
+              onMouseLeave: stopRepeat,
+              onTouchStart: () => startRepeat(-1),
+              onTouchEnd: stopRepeat,
+              "aria-label": "Decrease threads"
+            },
+            "−"
+          ),
+          React.createElement("input", {
+            type: "text",
+            inputMode: "numeric",
+            className: "step-value",
+            value: value ?? 15,
+            onChange: (e) => {
+              const raw = e.target.value.replace(/\D/g, "");
+              if (raw === "") { onChange(0); return; }
+              const n = parseInt(raw, 10);
+              onChange(Math.max(0, Math.min(100, isNaN(n) ? 0 : n)));
+            },
+            onBlur: (e) => {
+              if (e.target.value === "") onChange(15);
+            },
+            onKeyDown: (e) => {
+              if (e.key === "ArrowUp") { e.preventDefault(); haptic(4); step(1); }
+              if (e.key === "ArrowDown") { e.preventDefault(); haptic(4); step(-1); }
+              if (e.key === "Enter") e.target.blur();
+            },
+            "aria-label": "Thread count"
+          }),
+          React.createElement(
+            "button", {
+              className: "step-btn",
+              onClick: () => { haptic(6); step(1); },
+              onMouseDown: () => startRepeat(1),
+              onMouseUp: stopRepeat,
+              onMouseLeave: stopRepeat,
+              onTouchStart: () => startRepeat(1),
+              onTouchEnd: stopRepeat,
+              "aria-label": "Increase threads"
+            },
+            "+"
+          )
+        )
+      );
+    }
+
+    function Sidebar({ config, setConfig, onRun, running, darkMode, setDarkMode, selectedCount }) {
       const toggleStage = (id) => {
+        haptic();
         setConfig(c => ({
           ...c,
           enabled_stages: c.enabled_stages.includes(id) ?
@@ -941,67 +1657,48 @@
         }));
       };
 
+      const hasSelection = selectedCount > 0;
+      const disabled = running || (!config.target && !hasSelection);
+      const label = running
+        ? "⏳ Running…"
+        : hasSelection
+          ? ` Run on ${selectedCount} selected`
+          : " Run Recon Chain";
+
       return React.createElement(
         "div", { className: "sidebar" },
         React.createElement(
           "div", { style: { display: "flex", alignItems: "center" } },
-        React.createElement(
-          "div", { className: "brand" },
-          React.createElement("span", { className: "brand-mark" }, "recon⛓"),
-          React.createElement("span", { className: "brand-sub" }, "multi‑scan"),
-          React.createElement("span", {
-            style: {
-              fontSize: 10,
-              fontWeight: 600,
-              color: "#ffffff",
-              background: "#3b7a68",
-              padding: "2px 7px",
-              borderRadius: 4,
-              marginLeft: 0,
-              letterSpacing: 0.4,
-              display: "inline-block"
-            }
-          }, "v1")
-        ),
-
+          React.createElement(
+            "div", { className: "brand" },
+            React.createElement("span", { className: "brand-mark" }, "recon⛓"),
+            React.createElement("span", { className: "brand-sub" }, "multi‑scan"),
+            React.createElement("span", {
+              style: {
+                fontSize: 10,
+                fontWeight: 600,
+                color: "#ffffff",
+                background: "#3b7a68",
+                padding: "2px 7px",
+                borderRadius: 4,
+                marginLeft: 0,
+                letterSpacing: 0.4,
+                display: "inline-block"
+              }
+            }, "v2")
+          ),
           React.createElement(
             "div", { className: "theme-switch" },
             React.createElement("span", { className: "label" }, darkMode ? "🌙" : "☀️"),
             React.createElement(
-              "div", { className: "toggle-track", onClick: () => setDarkMode(!darkMode) },
+              "div", { className: "toggle-track", onClick: () => { haptic(); setDarkMode(!darkMode); } },
               React.createElement("div", { className: "thumb" })
             )
           )
         ),
         React.createElement(
-          "div", { style: { fontSize: 9, opacity: 0.4, letterSpacing: 0.3, marginTop: -20 } },
+          "div", { style: { fontSize: 9, opacity: 0.4, letterSpacing: 0.3, marginTop: -16 } },
           "@mithun-jana"
-        ),
-
-        React.createElement(
-          "div", null,
-          React.createElement(
-            "div", { className: "history-header", style: { display: "flex", justifyContent: "space-between", marginBottom: 8 } },
-            React.createElement("span", { style: { fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, color: "#5f7470" } }, "Scan History"),
-            React.createElement("button", { className: "btn-ghost", onClick: onClearHistory, style: { fontSize: '10px', padding: '2px 12px' } }, "Clear All")
-          ),
-          React.createElement(
-            "div", { className: "history-panel" },
-            history.length === 0 ?
-              React.createElement("div", { className: "muted", style: { fontSize: '11px', padding: '12px 0' } }, "No scans yet") :
-              history.map((scan, idx) => React.createElement(
-                "div", { key: idx, className: "history-item", onClick: () => onLoadHistory(scan) },
-                React.createElement(
-                  "div", null,
-                  React.createElement("div", { className: "target" }, truncateTarget(scan.name || scan.target)),
-                  React.createElement("div", { className: "meta" },
-                    new Date(scan.created_at || scan.timestamp).toLocaleString(),
-                    " · ", scan.asset_count || 0, " assets"
-                  )
-                ),
-                React.createElement("span", { className: `status ${scan.status}` }, scan.status)
-              ))
-          )
         ),
 
         React.createElement(
@@ -1024,23 +1721,39 @@
                 "div", {
                   key: m.id,
                   className: `scope-tab ${config.scope_mode === m.id ? "active" : ""}`,
-                  onClick: () => setConfig(c => {
-                    if (c.scope_mode === m.id) return c;
-                    let enabled_stages = c.enabled_stages;
-                    if (m.id === "cidr") {
-                      const has = c.enabled_stages.some(s => s === "device_scan" || s === "port_scan");
-                      if (!has) enabled_stages = ["device_scan", "port_scan"];
-                    } else if (m.id === "wildcard" && c.scope_mode === "cidr") {
-                      enabled_stages = ["subdomain_enum", "http_probe"];
-                    }
-                    return { ...c, scope_mode: m.id, enabled_stages };
-                  })
+                  onClick: () => {
+                    haptic();
+                    setConfig(c => {
+                      if (c.scope_mode === m.id) return c;
+                      let enabled_stages = c.enabled_stages;
+                      if (m.id === "cidr") {
+                        const has = c.enabled_stages.some(s => s === "device_scan" || s === "port_scan");
+                        if (!has) enabled_stages = ["device_scan", "port_scan"];
+                      } else if (m.id === "wildcard" && c.scope_mode === "cidr") {
+                        enabled_stages = ["subdomain_enum", "http_probe"];
+                      }
+                      return { ...c, scope_mode: m.id, enabled_stages };
+                    });
+                  }
                 },
                 m.label
               ))
             )
           ),
-          config.enabled_stages.includes("dir_fuzz") && React.createElement(WordlistUpload, { config, setConfig })
+          config.enabled_stages.includes("dir_fuzz") && React.createElement(WordlistUpload, { config, setConfig }),
+          config.enabled_stages.includes("dir_fuzz") && React.createElement(
+            "div", { className: "field" },
+            React.createElement("label", null, "Fuzz Engine"),
+            React.createElement(
+              "select", {
+                value: config.fuzz_engine || "auto",
+                onChange: e => { haptic(); setConfig(c => ({ ...c, fuzz_engine: e.target.value })); }
+              },
+              React.createElement("option", { value: "auto" }, "Auto"),
+              React.createElement("option", { value: "feroxbuster" }, "feroxbuster"),
+              React.createElement("option", { value: "dirsearch" }, "dirsearch"),
+            )
+          )
         ),
 
         React.createElement(StageChain, {
@@ -1052,10 +1765,10 @@
         React.createElement(
           "button", {
             className: "btn",
-            onClick: () => onRun(),
-            disabled: running || !config.target
+            onClick: () => { haptic(); onRun(); },
+            disabled
           },
-          running ? "Running…" : "Run Recon Chain"
+          label
         )
       );
     }
@@ -1106,21 +1819,21 @@
             )
           ] :
           isDevice ? [
-            React.createElement("span", { key: "ip", className: "badge", style: { backgroundColor: '#66d9c4', color: '#0B1210' } },
+            React.createElement("span", { key: "ip", className: "badge type-device" },
               `IP ${a.meta?.ip || a.value}`
             ),
-            hostname && React.createElement("span", { key: "hostname", className: "badge", style: { backgroundColor: '#64b5f6', color: '#0B1210' } }, hostname),
-            mac ? React.createElement("span", { key: "mac", className: "badge", style: { backgroundColor: '#ba68c8', color: '#0B1210' } },
+            hostname && React.createElement("span", { key: "hostname", className: "badge type-url" }, hostname),
+            mac ? React.createElement("span", { key: "mac", className: "badge type-directory" },
               `MAC ${mac}`
             ) : React.createElement("span", { key: "no-mac", className: "muted", style: { fontSize: '10px', marginLeft: '4px' } },
               "MAC not visible"
             )
           ] :
           isPort ? [
-            React.createElement("span", { key: "port-badge", className: "badge", style: { backgroundColor: '#ff9d5c', color: '#0B1210' } },
+            React.createElement("span", { key: "port-badge", className: "badge type-open_port" },
               `Port ${port}`
             ),
-            (a.meta?.service || a.meta?.product) && React.createElement("span", { key: "service", className: "badge", style: { backgroundColor: '#64b5f6', color: '#0B1210' } },
+            (a.meta?.service || a.meta?.product) && React.createElement("span", { key: "service", className: "badge type-url" },
               `${a.meta.service || a.meta.product} ${a.meta.version || ''}`.trim()
             ),
             resolvedFrom && resolvedFrom !== ip && React.createElement("span", { key: "resolved", className: "muted", style: { marginLeft: '6px', fontSize: '10px' } },
@@ -1131,29 +1844,27 @@
             hasScreenshot && React.createElement(
               "button", {
                 key: "screenshot",
-                className: "badge",
-                style: { cursor: 'pointer', backgroundColor: '#64b5f6', color: '#0B1210', border: 'none' },
+                className: "badge type-url",
+                style: { cursor: 'pointer' },
                 onClick: (e) => { e.stopPropagation();
                   onViewScreenshot(a); }
               },
               "📷 View Screenshot"
             ),
             statusCode && React.createElement(
-              "span", { key: "status", className: `badge ${statusCode >= 200 && statusCode < 300 ? 'sev-medium' : 'sev-high'}`,
-                style: {
-                  backgroundColor: statusCode >= 200 && statusCode < 300 ? '#2DD4A7' : '#FF6B5D',
-                  color: '#0B1210'
-                }
+              "span", {
+                key: "status",
+                className: statusCode >= 200 && statusCode < 300 ? "badge type-http_service" : "badge sev-high"
               },
               `HTTP ${statusCode}`
             ),
-            tech && tech.length > 0 && tech.map(t => React.createElement("span", { key: t, className: "badge", style: { backgroundColor: '#c792ea', color: '#0B1210' } }, t)),
+            tech && tech.length > 0 && tech.map(t => React.createElement("span", { key: t, className: "badge type-js_file" }, t)),
             contentLength && contentLength > 0 && React.createElement(
-              "span", { key: "size", className: "badge", style: { backgroundColor: '#64b5f6', color: '#0B1210' } },
+              "span", { key: "size", className: "badge type-url" },
               sizeDisplay
             ),
             responseTime && responseTime > 0 && React.createElement(
-              "span", { key: "time", className: "badge", style: { backgroundColor: '#2DD4A7', color: '#0B1210' } },
+              "span", { key: "time", className: "badge type-http_service" },
               `${responseTime} ms`
             ),
             title && React.createElement("span", { key: "title", className: "muted", style: { marginLeft: '4px' } }, title),
@@ -1164,6 +1875,58 @@
               `${endpoints.length} endpoints`
             )
           ]
+        )
+      );
+    }
+
+    function PromptModal({ title, placeholder, confirmLabel, onSubmit, onCancel, initialValue }) {
+      const [value, setValue] = React.useState(initialValue || "");
+      const inputRef = React.useRef(null);
+      React.useEffect(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.select();
+        }
+      }, []);
+      const submit = () => {
+        const trimmed = value.trim();
+        if (!trimmed) return;
+        onSubmit(trimmed);
+      };
+      return React.createElement(
+        "div", { className: "modal-overlay", onClick: onCancel },
+        React.createElement(
+          "div", { className: "modal-content prompt-card", onClick: e => e.stopPropagation() },
+          React.createElement("div", { className: "prompt-card-title" }, title),
+          React.createElement("input", {
+            ref: inputRef,
+            type: "text",
+            placeholder: placeholder || "",
+            value,
+            onChange: e => setValue(e.target.value),
+            onKeyDown: e => { if (e.key === "Enter") submit(); if (e.key === "Escape") onCancel(); },
+            className: "prompt-card-input"
+          }),
+          React.createElement(
+            "div", { style: { display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 22 } },
+            React.createElement("button", { className: "btn-ghost", onClick: () => { haptic(); onCancel(); } }, "Cancel"),
+            React.createElement("button", { className: "btn", onClick: () => { haptic(15); submit(); }, disabled: !value.trim() }, confirmLabel || "Create")
+          )
+        )
+      );
+    }
+
+    function ConfirmModal({ message, confirmLabel, onConfirm, onCancel }) {
+      return React.createElement(
+        "div", { className: "modal-overlay", onClick: onCancel },
+        React.createElement(
+          "div", { className: "modal-content", onClick: e => e.stopPropagation(), style: { maxWidth: 360, padding: 20 } },
+          React.createElement("div", { style: { fontSize: 14, marginBottom: 18, lineHeight: 1.5 } }, message),
+          React.createElement(
+            "div", { style: { display: "flex", justifyContent: "flex-end", gap: 8 } },
+            React.createElement("button", { className: "btn-ghost", onClick: () => { haptic(); onCancel(); } }, "Cancel"),
+            React.createElement("button", { className: "btn", onClick: () => { haptic(15); onConfirm(); } }, confirmLabel || "Confirm")
+          )
         )
       );
     }
@@ -1194,11 +1957,37 @@
           loading ? React.createElement("div", { className: "muted", style: { padding: '40px', textAlign: 'center' } }, "Loading screenshot…") :
           error ? React.createElement("div", { style: { color: '#ff6b5d', padding: '40px', textAlign: 'center' } }, `Error: ${error}`) :
           React.createElement("img", { src: imageUrl, alt: `Screenshot of ${asset.value}` }),
-          React.createElement("div", { className: "modal-url", style: { fontFamily: 'JetBrains Mono', fontSize: 12, color: '#7c8f89', marginTop: 12 } },
+          React.createElement("div", { className: "modal-url", style: { fontFamily: 'JetBrains Mono', fontSize: 12, color: '#7a8f88', marginTop: 12 } },
             `URL: ${asset.value}`
           )
         )
       );
+    }
+
+    class AppErrorBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { error: null };
+      }
+      static getDerivedStateFromError(error) { return { error }; }
+      componentDidCatch(error, info) { console.error("recon-chain UI crashed:", error, info); }
+      render() {
+        if (this.state.error) {
+          return React.createElement(
+            "div", {
+              style: {
+                fontFamily: "'JetBrains Mono', monospace", color: "#ff6b5d",
+                padding: 40, maxWidth: 640, margin: "60px auto", lineHeight: 1.6
+              }
+            },
+            React.createElement("div", { style: { fontSize: 16, fontWeight: 700, marginBottom: 12 } }, "Something went wrong in the UI."),
+            React.createElement("div", { style: { fontSize: 13, opacity: 0.85, marginBottom: 20 } }, String(this.state.error && this.state.error.message || this.state.error)),
+            React.createElement("button", { className: "btn", onClick: () => { this.setState({ error: null }); } }, "Try to recover"),
+            React.createElement("div", { style: { fontSize: 11, opacity: 0.5, marginTop: 16 } }, "If this keeps happening, refresh the page.")
+          );
+        }
+        return this.props.children;
+      }
     }
 
     function App() {
@@ -1222,26 +2011,140 @@
         enabled_stages: ["subdomain_enum", "http_probe"],
         wordlist_id: null,
         wordlistName: null,
+        fuzz_engine: "auto",
+        max_concurrency: 15,
       });
 
       const [scans, setScans] = useState([]);
       const [activeScanId, setActiveScanId] = useState(null);
       const [history, setHistory] = useState([]);
+      const [projects, setProjects] = useState([]);
+      const [activeProjectId, setActiveProjectId] = useState(() => localStorage.getItem('recon_active_project') || "");
       const [running, setRunning] = useState(false);
       const [screenshotAsset, setScreenshotAsset] = useState(null);
+      const [confirmDialog, setConfirmDialog] = useState(null);
+      const [promptDialog, setPromptDialog] = useState(null);
+      const [fuzzProgress, setFuzzProgress] = useState(null);
       const [filters, setFilters] = useState({ type: "", search: "", status_code: "", tech: "" });
       const [selectedAssets, setSelectedAssets] = useState(new Set());
+      const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
+      const [deleteMode, setDeleteMode] = useState(false);
+      const [selectedProjects, setSelectedProjects] = useState(new Set());
 
       const filtersRef = useRef(filters);
       useEffect(() => { filtersRef.current = filters; }, [filters]);
 
-      useEffect(() => { fetchHistory(); }, []);
+      useEffect(() => { fetchHistory(); fetchProjects(); }, []);
+
+      useEffect(() => {
+        localStorage.setItem('recon_active_project', activeProjectId || "");
+      }, [activeProjectId]);
+
+      useEffect(() => {
+        if (!activeProjectId) {
+          setActiveScanId(null);
+          setFuzzProgress(null);
+          return;
+        }
+        const list = history.filter(h => String(h.project_id || "") === String(activeProjectId));
+        if (list.length === 0) {
+          setActiveScanId(null);
+          setFuzzProgress(null);
+          return;
+        }
+        const newest = list[0];
+        setActiveScanId(newest.id);
+        setScans(prev => {
+          const existing = prev.find(s => s.id === newest.id);
+          if (existing) return prev;
+          return [...prev, {
+            id: newest.id,
+            target: newest.target,
+            name: newest.name || newest.target,
+            status: newest.status,
+            scan: newest,
+            assets: [],
+            summary: null,
+            running: newest.status === "running",
+          }];
+        });
+        fetchScanData(newest.id);
+      }, [activeProjectId]);
+
+      const dedupeById = (arr) => {
+        const seen = new Map();
+        for (const item of arr) seen.set(String(item.id), item);
+        return Array.from(seen.values());
+      };
+
+      const fetchProjects = async () => {
+        try {
+          const res = await apiFetch(`${API}/projects`);
+          if (res.ok) setProjects(dedupeById(await res.json()));
+        } catch (e) { console.error('Failed to load projects:', e); }
+      };
+
+      const createProject = () => {
+        setPromptDialog({
+          title: "New project profile",
+          placeholder: "e.g. xyz.com",
+          confirmLabel: "Create",
+          onSubmit: async (name) => {
+            setPromptDialog(null);
+            try {
+              const res = await apiFetch(`${API}/projects?name=${encodeURIComponent(name)}`, { method: "POST" });
+              if (!res.ok) throw new Error(await res.text());
+              const project = await res.json();
+              setProjects(p => dedupeById([...p, project]));
+              setActiveProjectId(String(project.id));
+            } catch (e) { alert('Failed to create project: ' + e.message); }
+          }
+        });
+      };
+
+      const deleteProject = (projectId) => {
+        setConfirmDialog({
+          message: "Delete this project profile and ALL its scans? This cannot be undone.",
+          confirmLabel: "Delete",
+          onConfirm: async () => {
+            setConfirmDialog(null);
+            try {
+              const res = await apiFetch(`${API}/projects/${projectId}`, { method: "DELETE" });
+              if (!res.ok) throw new Error(await res.text());
+              setProjects(p => p.filter(pr => String(pr.id) !== String(projectId)));
+              setActiveProjectId(prev => String(prev) === String(projectId) ? "" : prev);
+              setScans(prev => prev.filter(s => String(s.scan?.project_id || "") !== String(projectId)));
+              await fetchHistory();
+            } catch (e) { alert('Failed to delete project: ' + e.message); }
+          }
+        });
+      };
 
       useEffect(() => {
         if (!activeScanId) return;
         const handle = setTimeout(() => { fetchScanData(activeScanId); }, 300);
         return () => clearTimeout(handle);
       }, [activeScanId, filters.type, filters.search, filters.status_code, filters.tech]);
+
+      useEffect(() => {
+        const activeStatus = scans.find(s => s.id === activeScanId)?.scan?.status;
+        if (!activeScanId || (activeStatus && activeStatus !== "running" && activeStatus !== "queued")) {
+          setFuzzProgress(null);
+          return;
+        }
+        let cancelled = false;
+        const poll = async () => {
+          try {
+            const res = await apiFetch(`${API}/scans/${activeScanId}/dir_fuzz_progress`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!cancelled) setFuzzProgress(data.active ? data : null);
+          } catch (e) { /* ignore */ }
+        };
+        poll();
+        const interval = setInterval(poll, 1500);
+        return () => { cancelled = true; clearInterval(interval); };
+      }, [activeScanId, scans.find(s => s.id === activeScanId)?.scan?.status]);
 
       const fetchHistory = async () => {
         try {
@@ -1262,7 +2165,6 @@
           Object.entries(currentFilters).forEach(([k, v]) => { if (v) params.set(k, v); });
           const a = await apiFetch(`${API}/scans/${scanId}/assets?${params.toString()}`);
           let assets = await a.json();
-          // dedupe
           const seen = new Set();
           assets = assets.filter(a => {
             const key = `${a.type}:${a.value}`;
@@ -1283,6 +2185,7 @@
       const loadHistory = (historyItem) => {
         setConfig(c => ({ ...c, target: historyItem.target }));
         setActiveScanId(historyItem.id);
+        setHistoryDrawerOpen(false);
         setScans(prev => {
           const existing = prev.find(s => s.id === historyItem.id);
           if (existing) return prev;
@@ -1300,38 +2203,53 @@
         fetchScanData(historyItem.id);
       };
 
-      const clearHistory = async () => {
-        if (!confirm('Clear all FINISHED scan history? Running/queued scans are kept.')) return;
-        try {
-          const res = await apiFetch(`${API}/scans`, { method: 'DELETE' });
-          if (!res.ok) throw new Error(await res.text());
-          const result = await res.json();
-          setScans(prev => prev.filter(s => s.status === 'running' || s.status === 'queued'));
-          setActiveScanId(prev => {
-            const stillThere = scans.find(s => s.id === prev && (s.status === 'running' || s.status === 'queued'));
-            return stillThere ? prev : null;
-          });
-          await fetchHistory();
-          if (result.skipped_running > 0) {
-            alert(`Cleared ${result.deleted} scan(s). ${result.skipped_running} running/queued scan(s) kept.`);
+      const clearHistory = () => {
+        const scopeLabel = activeProjectId
+          ? `scans in "${(projects.find(p => String(p.id) === String(activeProjectId)) || {}).name || 'this project'}"`
+          : 'ALL scans across every project';
+        setConfirmDialog({
+          message: `Clear FINISHED ${scopeLabel}? Running/queued scans are kept.`,
+          confirmLabel: "Clear",
+          onConfirm: async () => {
+            setConfirmDialog(null);
+            try {
+              const qs = activeProjectId ? `?project_id=${activeProjectId}` : "";
+              const res = await apiFetch(`${API}/scans${qs}`, { method: 'DELETE' });
+              if (!res.ok) throw new Error(await res.text());
+              const result = await res.json();
+              const clearedIds = new Set(
+                activeProjectId
+                  ? filteredHistory.map(h => h.id)
+                  : scans.filter(s => s.status !== 'running' && s.status !== 'queued').map(s => s.id)
+              );
+              setScans(prev => prev.filter(s => !clearedIds.has(s.id) || s.status === 'running' || s.status === 'queued'));
+              setActiveScanId(prev => (clearedIds.has(prev) ? null : prev));
+              await fetchHistory();
+              if (result.skipped_running > 0) {
+                alert(`Cleared ${result.deleted} scan(s). ${result.skipped_running} running/queued scan(s) kept.`);
+              }
+            } catch (e) { alert('Failed to clear history: ' + e.message); }
           }
-        } catch (e) { alert('Failed to clear history: ' + e.message); }
+        });
       };
 
-      const run = async (overrides = {}) => {
-        const target = overrides.target !== undefined ? overrides.target : config.target;
-        const name = overrides.name !== undefined ? overrides.name : (truncateTarget(target) || target);
-        if (!target) return;
+      const submitScan = async (target, name, projectId) => {
         setRunning(true);
+        setFilters({ type: "", search: "", status_code: "", tech: "" });
+        setSelectedAssets(new Set());
+
         const payload = {
           name,
           target,
           scope_mode: config.scope_mode,
           enabled_stages: config.enabled_stages,
           wordlist_id: config.wordlist_id || null,
+          fuzz_engine: config.fuzz_engine || "auto",
+          max_concurrency: config.max_concurrency || 15,
         };
         try {
-          const res = await apiFetch(`${API}/scans`, {
+          const qs = projectId ? `?project_id=${projectId}` : "";
+          const res = await apiFetch(`${API}/scans${qs}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -1360,11 +2278,64 @@
               return prev;
             });
             fetchScanData(data.id);
-          }, 1000);
+          }, 1500);
         } catch (e) {
           alert("Could not reach the API at " + API + ". Is the backend running?");
           setRunning(false);
         }
+      };
+
+      const run = async (overrides = {}) => {
+        const target = overrides.target !== undefined ? overrides.target : config.target;
+        const hasSelection = selectedAssets.size > 0;
+
+        if (!hasSelection && (!target || target.trim() === "")) {
+          return;
+        }
+
+        let finalTarget = target;
+        let finalName = overrides.name !== undefined ? overrides.name : (truncateTarget(target) || target);
+
+        if (hasSelection && overrides.target === undefined) {
+          const values = Array.from(selectedAssets)
+            .map(id => activeAssets.find(a => a.id === id))
+            .filter(Boolean)
+            .map(a => a.value);
+          const urls = Array.from(new Set(values));
+          if (urls.length > 0) {
+            finalTarget = urls.join(', ');
+            finalName = urls.length === 1
+              ? (urls[0].length > 28 ? urls[0].slice(0, 28) + '…' : urls[0])
+              : `${urls[0].length > 20 ? urls[0].slice(0, 20) + '…' : urls[0]} +${urls.length - 1}`;
+            setConfig(c => ({ ...c, target: finalTarget }));
+            setSelectedAssets(new Set());
+          }
+        }
+
+        if (!finalTarget) return;
+
+        if (!activeProjectId) {
+          setPromptDialog({
+            title: projects.length === 0              ? "Create a project profile first"
+              : "Pick or create a project profile",
+            placeholder: "e.g. xyz.com",
+            confirmLabel: "Create & Run",
+            onSubmit: async (name2) => {
+              setPromptDialog(null);
+              try {
+                const res = await apiFetch(`${API}/projects?name=${encodeURIComponent(name2)}`, { method: "POST" });
+                if (!res.ok) throw new Error(await res.text());
+                const project = await res.json();
+                setProjects(p => dedupeById([...p, project]));
+                setActiveProjectId(String(project.id));
+                submitScan(finalTarget, finalName, project.id);
+              } catch (e) { alert('Failed to create project: ' + e.message); }
+            }
+          });
+          return;
+        }
+
+        submitScan(finalTarget, finalName, activeProjectId);
       };
 
       const stopScan = async (scanId) => {
@@ -1372,7 +2343,9 @@
         try {
           const res = await apiFetch(`${API}/scans/${scanId}/stop`, { method: "POST" });
           if (res.ok) {
-            setScans(prev => prev.map(s => s.id === scanId ? { ...s, status: 'failed', running: false } : s));
+            setScans(prev => prev.map(s => s.id === scanId
+              ? { ...s, status: 'failed', running: false, scan: s.scan ? { ...s.scan, status: 'failed' } : s.scan }
+              : s));
             fetchHistory();
             setTimeout(() => fetchScanData(scanId), 500);
           } else {
@@ -1402,16 +2375,10 @@
         if (assets.length === 0) return alert('No assets to export');
         const headers = ['Type', 'Value', 'Source', 'Port', 'IP', 'Service', 'Status Code', 'Title', 'Tech', 'Severity'];
         const rows = assets.map(a => [
-          a.type,
-          a.value,
-          a.source || 'unknown',
-          a.meta?.port || '',
-          a.meta?.ip || '',
-          a.meta?.service || '',
-          a.meta?.status_code || '',
-          a.meta?.title || '',
-          (a.meta?.tech || []).join('; '),
-          a.meta?.severity || ''
+          a.type, a.value, a.source || 'unknown',
+          a.meta?.port || '', a.meta?.ip || '', a.meta?.service || '',
+          a.meta?.status_code || '', a.meta?.title || '',
+          (a.meta?.tech || []).join('; '), a.meta?.severity || ''
         ]);
         const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -1444,28 +2411,21 @@
         }
       };
 
-      const runOnSelected = () => {
-        if (selectedAssets.size === 0) return alert('Select assets first');
-        const values = Array.from(selectedAssets)
-          .map(id => activeAssets.find(a => a.id === id))
-          .filter(Boolean)
-          .map(a => a.value);
-        const urls = Array.from(new Set(values));
-        const target = urls.join(', ');
-        const name = urls.length === 1 ?
-          (urls[0].length > 28 ? urls[0].slice(0, 28) + '…' : urls[0]) :
-          `${urls[0].length > 20 ? urls[0].slice(0, 20) + '…' : urls[0]} +${urls.length - 1}`;
-        setConfig(c => ({ ...c, target }));
-        run({ target, name });
-        setSelectedAssets(new Set());
+      const filteredHistory = activeProjectId
+        ? history.filter(h => String(h.project_id || "") === String(activeProjectId))
+        : history;
+
+      const setConcurrency = (n) => {
+        const clamped = Math.max(0, Math.min(100, n));
+        setConfig(c => c.max_concurrency === clamped ? c : { ...c, max_concurrency: clamped });
       };
 
       return React.createElement(
         "div", { className: "app" },
         React.createElement(Sidebar, {
-          config, setConfig, onRun: run, running, history,
-          onLoadHistory: loadHistory, onClearHistory: clearHistory,
-          darkMode, setDarkMode
+          config, setConfig, onRun: run, running,
+          darkMode, setDarkMode,
+          selectedCount: selectedAssets.size
         }),
         React.createElement(
           "div", { className: "main" },
@@ -1475,21 +2435,50 @@
               "div", null,
               React.createElement(
                 "div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 600 } },
-                activeScanData ? truncateTarget(activeScanData.name || activeScanData.target) : "No scan selected"
+                activeProjectId
+                  ? (activeScanData ? truncateTarget(activeScanData.name || activeScanData.target) : "No scan selected")
+                  : "All Projects"
               ),
               React.createElement(
                 "div", { className: "muted", style: { fontSize: 12 } },
-                activeScanData ? `scope: ${activeScanData.scope_mode} · ID: ${activeScanData.id}` : "run a new scan or load from history"
+                activeProjectId
+                  ? (activeScanData ? `scope: ${activeScanData.scope_mode} · ID: ${activeScanData.id}` : "run a new scan or load from history")
+                  : `${projects.length} project${projects.length === 1 ? "" : "s"} · click a card to open`
+              ),
+              /* NEW: show active scan's stages using asset badges */
+              activeProjectId && activeScanData && Array.isArray(activeScanData.enabled_stages) && activeScanData.enabled_stages.length > 0 && React.createElement(
+                "div", { style: { display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 } },
+                activeScanData.enabled_stages.map(stage =>
+                  React.createElement("span", {
+                    key: stage,
+                    className: `badge type-${stageBadgeType(stage)}`,
+                    title: stage
+                  }, stage)
+                )
+              ),
+              fuzzProgress && React.createElement(
+                "div", { className: "fuzz-progress", style: { marginTop: 8 } },
+                React.createElement(
+                  "div", { className: "fuzz-progress-label" },
+                  `Fuzzing ${fuzzProgress.target || ''} — ${fuzzProgress.tried.toLocaleString()} / ${fuzzProgress.total.toLocaleString()} words tried`
+                ),
+                React.createElement(
+                  "div", { className: "fuzz-progress-track" },
+                  React.createElement("div", {
+                    className: "fuzz-progress-fill",
+                    style: { width: `${fuzzProgress.total ? Math.min(100, (fuzzProgress.tried / fuzzProgress.total) * 100) : 0}%` }
+                  })
+                )
               )
             ),
             React.createElement(
               "div", { style: { display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' } },
-              activeScanData && React.createElement("span", { className: `status-pill ${activeScanData.status}` }, activeScanData.status),
-              activeScan && activeScan.running && React.createElement(
+              activeProjectId && activeScanData && React.createElement("span", { className: `status-pill ${activeScanData.status}` }, activeScanData.status),
+              activeProjectId && activeScan && activeScan.running && React.createElement(
                 "button", { className: "btn-danger", onClick: () => stopScan(activeScan.id), style: { fontSize: '11px', padding: '6px 14px' } },
                 "⏹ Stop Scan"
               ),
-              activeAssets.length > 0 && React.createElement(
+              activeProjectId && activeAssets.length > 0 && React.createElement(
                 React.Fragment, null,
                 React.createElement("button", { className: "btn-success small", onClick: () => exportJSON(activeAssets, activeScanData) }, "JSON"),
                 React.createElement("button", { className: "btn-success small", onClick: () => exportCSV(activeAssets, activeScanData) }, "CSV")
@@ -1497,7 +2486,167 @@
             )
           ),
 
-          activeSummary && React.createElement(
+          !activeProjectId && React.createElement(
+            "div", { className: "projects-overview" },
+            React.createElement(
+              "div", { className: "projects-overview-header" },
+              React.createElement("div", { className: "projects-overview-title" }, "Projects"),
+              React.createElement("div", { className: "projects-overview-sub" },
+                projects.length === 0
+                  ? "No projects yet"
+                  : `${projects.length} project${projects.length === 1 ? "" : "s"} available`
+              )
+            ),
+            React.createElement(
+              "div", { className: "projects-toolbar" },
+              React.createElement(
+                "button", {
+                  className: "btn",
+                  onClick: () => { haptic(); createProject(); },
+                  style: { padding: "8px 16px", fontSize: 12 }
+                },
+                "+ Create project"
+              ),
+              deleteMode
+                ? React.createElement(
+                    React.Fragment, null,
+                    React.createElement("span", { className: "projects-toolbar-count" },
+                      `${selectedProjects.size} selected`
+                    ),
+                    React.createElement(
+                      "button", {
+                        className: "btn-ghost",
+                        onClick: () => { haptic(); setDeleteMode(false); setSelectedProjects(new Set()); }
+                      },
+                      "Cancel"
+                    ),
+                    React.createElement(
+                      "button", {
+                        className: "btn-danger",
+                        disabled: selectedProjects.size === 0,
+                        onClick: () => {
+                          haptic();
+                          if (selectedProjects.size === 0) return;
+                          setConfirmDialog({
+                            message: `Delete ${selectedProjects.size} project${selectedProjects.size === 1 ? "" : "s"} and ALL their scans? This cannot be undone.`,
+                            confirmLabel: "Delete all",
+                            onConfirm: async () => {
+                              setConfirmDialog(null);
+                              const ids = Array.from(selectedProjects);
+                              for (const id of ids) {
+                                try {
+                                  await apiFetch(`${API}/projects/${id}`, { method: "DELETE" });
+                                } catch (e) { /* continue */ }
+                              }
+                              setProjects(list => list.filter(pr => !selectedProjects.has(String(pr.id))));
+                              setScans(prev => prev.filter(s => !selectedProjects.has(String(s.scan?.project_id || ""))));
+                              if (selectedProjects.has(String(activeProjectId))) setActiveProjectId("");
+                              setSelectedProjects(new Set());
+                              setDeleteMode(false);
+                              await fetchHistory();
+                            }
+                          });
+                        }
+                      },
+                      `Delete ${selectedProjects.size || 0}`
+                    )
+                  )
+                : React.createElement(
+                    "button", {
+                      className: "btn-ghost",
+                      onClick: () => { haptic(); setDeleteMode(true); }
+                    },
+                    "Select to delete"
+                  )
+            ),
+            projects.length === 0 ?
+              React.createElement(
+                "div", { className: "projects-empty" },
+                React.createElement("div", { className: "projects-empty-em" }, "📁"),
+                React.createElement("div", { className: "projects-empty-title" }, "No projects yet"),
+                React.createElement("div", { className: "projects-empty-sub" }, "Create your first project profile to start running scans."),
+                React.createElement("button", { className: "btn", onClick: () => { haptic(); createProject(); } }, "+ Create project")
+              ) :
+              React.createElement(
+                "div", { className: "projects-grid" },
+                projects.map(p => {
+                  const projectScans = history.filter(h => String(h.project_id || "") === String(p.id));
+                  const latest = projectScans[0];
+                  const totalScans = projectScans.length;
+                  const completed = projectScans.filter(s => s.status === "completed").length;
+                  const failed = projectScans.filter(s => s.status === "failed").length;
+                  const isSelected = selectedProjects.has(String(p.id));
+                  return React.createElement(
+                    "div", {
+                      key: p.id,
+                      className: `project-card ${isSelected ? "selected-for-delete" : ""}`,
+                      onClick: () => {
+                        haptic();
+                        if (deleteMode) {
+                          setSelectedProjects(prev => {
+                            const next = new Set(prev);
+                            if (next.has(String(p.id))) next.delete(String(p.id));
+                            else next.add(String(p.id));
+                            return next;
+                          });
+                        } else {
+                          setActiveProjectId(String(p.id));
+                        }
+                      }
+                    },
+                    deleteMode && React.createElement("input", {
+                      type: "checkbox",
+                      className: "project-card-check",
+                      checked: isSelected,
+                      onClick: (e) => e.stopPropagation(),
+                      onChange: () => {
+                        setSelectedProjects(prev => {
+                          const next = new Set(prev);
+                          if (next.has(String(p.id))) next.delete(String(p.id));
+                          else next.add(String(p.id));
+                          return next;
+                        });
+                      }
+                    }),
+                    React.createElement(
+                      "div", { className: "project-card-top" },
+                      React.createElement("div", { className: "project-card-icon" }, "📁"),
+                      React.createElement("div", { className: "project-card-name" }, p.name),
+                      latest && React.createElement("span", { className: `history-status-badge ${latest.status}` }, latest.status)
+                    ),
+                    React.createElement(
+                      "div", { className: "project-card-meta" },
+                      React.createElement("span", { className: "project-card-stat" },
+                        React.createElement("b", null, totalScans), "scans"
+                      ),
+                      completed > 0 && React.createElement("span", { className: "project-card-stat ok" },
+                        React.createElement("b", null, completed), "ok"
+                      ),
+                      failed > 0 && React.createElement("span", { className: "project-card-stat bad" },
+                        React.createElement("b", null, failed), "failed"
+                      )
+                    ),
+                    React.createElement(
+                      "div", { className: "project-card-footer" },
+                      React.createElement(
+                        "div", { className: "project-card-last" },
+                        latest ? `Last · ${formatTime(latest.created_at || latest.timestamp)}` : "No scans yet"
+                      ),
+                      !deleteMode && React.createElement(
+                        "button", {
+                          className: "pc-action-btn danger",
+                          title: "Delete project",
+                          onClick: (e) => { e.stopPropagation(); haptic(); deleteProject(p.id); }
+                        },
+                        "🗑"
+                      )
+                    )
+                  );
+                })
+              )
+          ),
+
+          activeProjectId && activeSummary && React.createElement(
             "div", { className: "summary-row" },
             React.createElement("div", { className: "summary-chip" },
               React.createElement("b", null, activeAssets.length), "assets"
@@ -1508,7 +2657,7 @@
             ))
           ),
 
-          React.createElement(
+          activeProjectId && React.createElement(
             "div", { className: "filter-bar" },
             React.createElement("input", {
               placeholder: "Search value…",
@@ -1541,11 +2690,55 @@
               value: filters.tech,
               onChange: e => setFilters(f => ({ ...f, tech: e.target.value }))
             }),
+            config.enabled_stages.includes("dir_fuzz") && React.createElement("div", { className: "sep" }),
+            config.enabled_stages.includes("dir_fuzz") && React.createElement(ThreadStepper, {
+              value: config.max_concurrency ?? 15,
+              onChange: setConcurrency
+            }),
             React.createElement("div", { className: "sep" }),
-            React.createElement("button", { className: "btn-ghost", onClick: () => activeScanId && fetchScanData(activeScanId) }, "Refresh")
+
+            React.createElement("button", { className: "btn-ghost", onClick: () => { haptic(); activeScanId && fetchScanData(activeScanId); } }, "Refresh"),
+
+            React.createElement(
+              "div", { className: "project-picker" },
+              React.createElement("span", { className: "pp-icon" }, "📁"),
+              React.createElement(
+                "select", {
+                  value: activeProjectId || "",
+                  onChange: e => { haptic(); setActiveProjectId(e.target.value); }
+                },
+                React.createElement("option", { value: "" }, "All projects"),
+                projects.map(p => React.createElement("option", { key: p.id, value: p.id }, p.name))
+              ),
+              React.createElement(
+                "button", {
+                  className: "pp-btn",
+                  onClick: () => { haptic(); createProject(); },
+                  title: "New project profile"
+                },
+                "+"
+              ),
+              activeProjectId && React.createElement(
+                "button", {
+                  className: "pp-btn danger",
+                  onClick: () => { haptic(); deleteProject(activeProjectId); },
+                  title: "Delete this project"
+                },
+                "🗑"
+              )
+            ),
+
+            React.createElement(
+              "button", {
+                className: `history-toggle-btn ${historyDrawerOpen ? "active" : ""}`,
+                onClick: () => { haptic(); setHistoryDrawerOpen(o => !o); },
+                title: "Toggle scan history panel"
+              },
+              "📜 History"
+            )
           ),
 
-          activeAssets.length > 0 && React.createElement(
+          activeProjectId && activeAssets.length > 0 && React.createElement(
             "div", { className: "selection-bar" },
             React.createElement("input", {
               type: "checkbox",
@@ -1556,18 +2749,14 @@
               `${selectedAssets.size} of ${activeAssets.length} selected`
             ),
             React.createElement("div", { className: "sep" }),
-            React.createElement(
-              "button", {
-                className: "btn",
-                onClick: runOnSelected,
-                disabled: selectedAssets.size === 0,
-                style: { fontSize: '11px', padding: '4px 16px' }
-              },
-              "▶ Run on Selected"
+            React.createElement("span", { className: "hint" },
+              selectedAssets.size > 0
+                ? `Use Run button in sidebar to scan these`
+                : `Select assets to run recon on them`
             )
           ),
 
-          React.createElement(
+          activeProjectId && React.createElement(
             "table", null,
             React.createElement(
               "thead", null,
@@ -1599,14 +2788,82 @@
             )
           ),
 
-          screenshotAsset && React.createElement(ScreenshotModal, { asset: screenshotAsset, onClose: () => setScreenshotAsset(null) })
+          screenshotAsset && React.createElement(ScreenshotModal, { asset: screenshotAsset, onClose: () => setScreenshotAsset(null) }),
+          confirmDialog && React.createElement(ConfirmModal, {
+            message: confirmDialog.message,
+            confirmLabel: confirmDialog.confirmLabel,
+            onConfirm: confirmDialog.onConfirm,
+            onCancel: () => setConfirmDialog(null)
+          }),
+          promptDialog && React.createElement(PromptModal, {
+            title: promptDialog.title,
+            placeholder: promptDialog.placeholder,
+            confirmLabel: promptDialog.confirmLabel,
+            initialValue: promptDialog.initialValue,
+            onSubmit: promptDialog.onSubmit,
+            onCancel: () => setPromptDialog(null)
+          })
+        ),
+
+        React.createElement("div", {
+          className: `drawer-backdrop ${historyDrawerOpen ? "open" : ""}`,
+          onClick: () => setHistoryDrawerOpen(false)
+        }),
+        React.createElement(
+          "div", { className: `history-drawer ${historyDrawerOpen ? "open" : ""}` },
+          React.createElement(
+            "div", { className: "history-drawer-header" },
+            React.createElement("h3", null, "📜 Scan History"),
+            React.createElement(
+              "button", {
+                className: "history-drawer-close",
+                onClick: () => { haptic(); setHistoryDrawerOpen(false); },
+                title: "Close"
+              },
+              "✕"
+            )
+          ),
+          React.createElement(
+            "div", { className: "history-drawer-body" },
+            filteredHistory.length === 0 ?
+              React.createElement("div", { className: "history-drawer-empty" }, "No scans yet") :
+              filteredHistory.map((scan, idx) => React.createElement(
+                "div", {
+                  key: idx,
+                  className: "history-drawer-item",
+                  onClick: () => { haptic(); loadHistory(scan); }
+                },
+                React.createElement(
+                  "div",
+                  { style: { minWidth: 0, flex: 1 } },
+                  React.createElement("div", { className: "hd-target" }, truncateTarget(scan.name || scan.target)),
+                  React.createElement(
+                    "div", { className: "hd-meta" },
+                    React.createElement("span", null, formatTime(scan.created_at || scan.timestamp)),
+                    React.createElement("span", null, `${scan.asset_count || 0} assets`)
+                  ),
+                  /* NEW: stage badges — reuse the same `.badge type-*` styles as the asset table */
+                  Array.isArray(scan.enabled_stages) && scan.enabled_stages.length > 0 && React.createElement(
+                    "div", { style: { display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 } },
+                    scan.enabled_stages.map(stage =>
+                      React.createElement("span", {
+                        key: stage,
+                        className: `badge type-${stageBadgeType(stage)}`,
+                        title: stage
+                      }, stage)
+                    )
+                  )
+                ),
+                React.createElement("span", { className: `history-status-badge ${scan.status}` }, scan.status)
+              ))
+          )
         )
       );
     }
 
     try {
       window.__reconAppMounted = true;
-      ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App, null));
+      ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(AppErrorBoundary, null, React.createElement(App, null)));
     } catch (err) {
       window.__reconAppMounted = false;
       document.getElementById("root").innerHTML =
