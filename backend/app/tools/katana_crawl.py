@@ -4,7 +4,7 @@ Active crawling + integrated JS analysis.
 from __future__ import annotations
 
 import re
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -17,9 +17,9 @@ LINK_RE = re.compile(r'''(?:href|src|action)=["']([^"'#\s]+)["']''', re.IGNORECA
 JS_URL_RE = re.compile(r'\.js($|\?)', re.IGNORECASE)
 
 
-async def _via_katana(base_url: str, depth: int = 3) -> AsyncIterator[RawResult]:
+async def _via_katana(base_url: str, depth: int = 3, scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     cmd = ["katana", "-u", base_url, "-d", str(depth), "-silent", "-jc"]
-    async for line in run_cmd_streaming(cmd, timeout=300):
+    async for line in run_cmd_streaming(cmd, timeout=300, scan_id=scan_id):
         url = line.strip()
         if not url:
             continue
@@ -37,7 +37,7 @@ def _same_host(url: str, host: str) -> bool:
         return False
 
 
-async def _via_python(base_url: str, rate: RateLimiter, max_pages: int = 60) -> AsyncIterator[RawResult]:
+async def _via_python(config: ScanConfig, base_url: str, rate: RateLimiter, max_pages: int = 60, scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     host = urlparse(base_url).hostname
     seen: set[str] = {base_url}
     queue: list[str] = [base_url]
@@ -78,21 +78,21 @@ async def _via_python(base_url: str, rate: RateLimiter, max_pages: int = 60) -> 
 
 
     if js_urls:
-        async for js_result in js_analysis_run(config, js_urls):  # <-- FIXED
+        async for js_result in js_analysis_run(config, js_urls, scan_id=scan_id):  # <-- FIXED
             yield js_result
 
 
-async def run(config: ScanConfig, base_urls: list[str]) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, base_urls: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     if not base_urls:
         return
     for base_url in base_urls:
         if which("katana"):
             try:
-                async for r in _via_katana(base_url):
+                async for r in _via_katana(base_url, scan_id=scan_id):
                     yield r
                 continue
             except Exception:
                 pass
         rate = RateLimiter(config.rate_limit_per_sec)
-        async for r in _via_python(base_url, rate):
+        async for r in _via_python(config, base_url, rate, scan_id=scan_id):
             yield r
