@@ -10,6 +10,50 @@ from typing import Any, AsyncIterator, Optional
 
 logger = logging.getLogger("recon")
 
+_ACTIVE_PROCESSES: dict[int, set] = {}
+
+
+def _register_process(scan_id: Optional[int], proc) -> None:
+    if scan_id is None:
+        return
+    _ACTIVE_PROCESSES.setdefault(scan_id, set()).add(proc)
+
+
+def _deregister_process(scan_id: Optional[int], proc) -> None:
+    if scan_id is None:
+        return
+    procs = _ACTIVE_PROCESSES.get(scan_id)
+    if procs is not None:
+        procs.discard(proc)
+        if not procs:
+            _ACTIVE_PROCESSES.pop(scan_id, None)
+
+
+def register_process(scan_id: Optional[int], proc) -> None:
+    _register_process(scan_id, proc)
+
+
+def deregister_process(scan_id: Optional[int], proc) -> None:
+    _deregister_process(scan_id, proc)
+
+
+def kill_scan_processes(scan_id: int) -> int:
+
+    procs = _ACTIVE_PROCESSES.pop(scan_id, set())
+    killed = 0
+    for proc in list(procs):
+        try:
+            if proc.returncode is None:
+                proc.kill()
+                killed += 1
+        except ProcessLookupError:
+            pass
+        except Exception as e:
+            logger.warning("kill_scan_processes: failed to kill a process for scan %s: %s", scan_id, e)
+    if killed:
+        logger.info("kill_scan_processes: killed %d active process(es) for scan %s", killed, scan_id)
+    return killed
+
 
 @functools.lru_cache(maxsize=64)
 def which(binary: str, verify_contains: Optional[str] = None) -> Optional[str]:
@@ -29,16 +73,19 @@ class ToolExecutionError(RuntimeError):
     pass
 
 
-async def run_cmd(cmd: list[str], timeout: int = 120) -> str:
-    
+async def run_cmd(cmd: list[str], timeout: int = 120, scan_id: Optional[int] = None) -> str:
+
     proc = await asyncio.create_subprocess_exec(
         *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
     )
+    _register_process(scan_id, proc)
     try:
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
     except asyncio.TimeoutError:
         proc.kill()
         raise
+    finally:
+        _deregister_process(scan_id, proc)
     if proc.returncode != 0:
         raise ToolExecutionError(
             f"{cmd[0]} exited {proc.returncode}: {stderr.decode(errors='ignore')[:300]}"
@@ -46,11 +93,12 @@ async def run_cmd(cmd: list[str], timeout: int = 120) -> str:
     return stdout.decode(errors="ignore")
 
 
-async def run_cmd_streaming(cmd: list[str], timeout: int = 600) -> AsyncIterator[str]:
+async def run_cmd_streaming(cmd: list[str], timeout: int = 600, scan_id: Optional[int] = None) -> AsyncIterator[str]:
     
     proc = await asyncio.create_subprocess_exec(
         *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
     )
+    _register_process(scan_id, proc)
     loop = asyncio.get_event_loop()
     deadline = loop.time() + timeout
 
@@ -72,6 +120,7 @@ async def run_cmd_streaming(cmd: list[str], timeout: int = 600) -> AsyncIterator
             if decoded:
                 yield decoded
     finally:
+        _deregister_process(scan_id, proc)
         if proc.returncode is None:
             try:
                 await asyncio.wait_for(proc.wait(), timeout=5)
