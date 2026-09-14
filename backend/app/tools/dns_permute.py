@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 import dns.resolver
 
@@ -83,14 +83,14 @@ async def _via_python(domain: str, known_subdomains: list[str], extra_words: lis
             yield result
 
 
-async def _via_dnsgen_puredns(domain: str, known_subdomains: list[str]) -> AsyncIterator[RawResult]:
+async def _via_dnsgen_puredns(domain: str, known_subdomains: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     import tempfile, os
     with tempfile.NamedTemporaryFile("w", delete=False, suffix=".txt") as f:
         f.write("\n".join(known_subdomains) or domain)
         input_path = f.name
 
     try:
-        gen_out = await run_cmd(["dnsgen", input_path])
+        gen_out = await run_cmd(["dnsgen", input_path], scan_id=scan_id)
         candidates = [line.strip() for line in gen_out.splitlines() if line.strip()]
     finally:
         os.unlink(input_path)
@@ -103,7 +103,7 @@ async def _via_dnsgen_puredns(domain: str, known_subdomains: list[str]) -> Async
             f.write("\n".join(candidates))
             cand_path = f.name
         try:
-            async for line in run_cmd_streaming(["puredns", "resolve", cand_path], timeout=300):
+            async for line in run_cmd_streaming(["puredns", "resolve", cand_path], timeout=300, scan_id=scan_id):
                 host = line.strip()
                 if host:
                     yield RawResult(
@@ -132,7 +132,7 @@ async def _via_dnsgen_puredns(domain: str, known_subdomains: list[str]) -> Async
                 yield result
 
 
-async def run(config: ScanConfig, domain: str, known_subdomains: list[str]) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, domain: str, known_subdomains: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     extra_words: list[str] = []
     if config.permutation_wordlist_id:
         from app.wordlists import load_wordlist_words
@@ -141,7 +141,7 @@ async def run(config: ScanConfig, domain: str, known_subdomains: list[str]) -> A
     if which("dnsgen"):
         try:
             got_any = False
-            async for r in _via_dnsgen_puredns(domain, known_subdomains):
+            async for r in _via_dnsgen_puredns(domain, known_subdomains, scan_id=scan_id):
                 got_any = True
                 yield r
             if got_any:
