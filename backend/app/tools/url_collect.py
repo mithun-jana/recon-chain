@@ -4,7 +4,7 @@ URL / endpoint collection (passive).
 """
 from __future__ import annotations
 
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 import httpx
 
@@ -30,8 +30,8 @@ async def _via_wayback(domain: str) -> AsyncIterator[RawResult]:
             yield RawResult(type="url", value=row[0], source="wayback-cdx")
 
 
-async def _via_gau(domain: str) -> AsyncIterator[RawResult]:
-    async for line in run_cmd_streaming(["gau", domain], timeout=180):
+async def _via_gau(domain: str, scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
+    async for line in run_cmd_streaming(["gau", domain], timeout=180, scan_id=scan_id):
         line = line.strip()
         if line.startswith(("http://", "https://")):
             yield RawResult(type="url", value=line, source="gau")
@@ -47,7 +47,7 @@ def _extract_domain(host: str) -> str:
     return h.lower()
 
 
-async def run(config: ScanConfig, hosts: list[str]) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, hosts: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
 
     candidates = hosts or [t.strip() for t in config.target.split(",") if t.strip()]
     domains = list(dict.fromkeys(_extract_domain(h) for h in candidates if h.strip()))
@@ -60,7 +60,7 @@ async def run(config: ScanConfig, hosts: list[str]) -> AsyncIterator[RawResult]:
         got_any = False
         if which("gau"):
             try:
-                async for r in _via_gau(domain):
+                async for r in _via_gau(domain, scan_id=scan_id):
                     got_any = True
                     if r.value not in seen:
                         seen.add(r.value)
