@@ -22,7 +22,7 @@ from app.tools import (
     screenshot, url_collect, katana_crawl, dir_fuzz,
     js_analysis, device_scan,
 )
-from app.tools.base import RawResult
+from app.tools.base import RawResult, kill_scan_processes
 
 logger = logging.getLogger("recon.orchestrator")
 
@@ -31,13 +31,13 @@ COMMIT_BATCH_INTERVAL = 0.4
 
 
 CHAIN_ORDER = [
+    Stage.http_probe,
     Stage.subdomain_enum,
+    Stage.dir_fuzz,
     Stage.url_collect,
     Stage.katana_crawl,
-    Stage.dir_fuzz,
     Stage.device_scan,
     Stage.port_scan,
-    Stage.http_probe,
     Stage.screenshot,
 ]
 
@@ -47,7 +47,7 @@ _scan_stop_events: Dict[int, asyncio.Event] = {}
 
 
 def get_scan_control(scan_id: int):
-    """Get stop controls for a scan."""
+    
     return {
         "stop_event": _scan_stop_events.get(scan_id),
     }
@@ -82,7 +82,13 @@ def _resolve_stage_order(enabled: list[Stage]) -> list[Stage]:
                 visit(dep)
         final_order.append(s)
 
-    for s in needed:
+    for s in ordered:
+        visit(s)
+
+    for s in CHAIN_ORDER:
+        if s in needed:
+            visit(s)
+    for s in sorted(needed, key=lambda x: x.value):
         visit(s)
 
     return final_order
@@ -100,7 +106,6 @@ class ReconOrchestrator:
         self._stop_event = asyncio.Event()
         self._running_tasks: Set[asyncio.Task] = set()
         
-        # Register this scan in the global registry
         _running_scans[scan.id] = self
         _scan_stop_events[scan.id] = self._stop_event
 
@@ -112,7 +117,9 @@ class ReconOrchestrator:
         for task in list(self._running_tasks):
             if not task.done():
                 task.cancel()
-        logger.info("scan %s: stop requested", self.scan.id)
+
+        killed = kill_scan_processes(self.scan.id)
+        logger.info("scan %s: stop requested (killed %d active process(es))", self.scan.id, killed)
 
     async def _check_control(self):
         """Check stop state."""
@@ -210,14 +217,14 @@ class ReconOrchestrator:
             for target in self._targets:
                 await self._check_control()
                 sub_cfg = cfg.model_copy(update={"target": target})
-                await self._store_stream(stage, subdomain_enum.run(sub_cfg), AssetType.subdomain)
+                await self._store_stream(stage, subdomain_enum.run(sub_cfg, scan_id=self.scan.id), AssetType.subdomain)
 
         elif stage == Stage.http_probe:
             cached_subs = self._cached(AssetType.subdomain)
   
             targets_are_full_urls = bool(self._targets) and all("://" in t for t in self._targets)
             hosts = self._targets if targets_are_full_urls else (cached_subs or self._targets)
-            await self._store_stream(stage, http_probe.run(cfg, hosts), AssetType.http_service)
+            await self._store_stream(stage, http_probe.run(cfg, hosts, scan_id=self.scan.id), AssetType.http_service)
 
         elif stage == Stage.port_scan:
             ips = self._cached(AssetType.ip) or [d.value for d in self._cache.get(AssetType.device, [])]
@@ -248,21 +255,21 @@ class ReconOrchestrator:
                 logger.warning("scan %s: no IPs to scan — skipping port_scan", self.scan.id)
                 return
 
-            await self._store_stream(stage, port_scan.run(cfg, ips), AssetType.open_port)
+            await self._store_stream(stage, port_scan.run(cfg, ips, scan_id=self.scan.id), AssetType.open_port)
             open_ports = [
                 (a.meta.get("ip"), a.meta.get("port"))
                 for a in self._cache.get(AssetType.open_port, [])
                 if a.meta.get("ip") and a.meta.get("port")
             ]
             if open_ports:
-                await self._merge_meta(nmap_enrich.run(cfg, open_ports))
+                await self._merge_meta(nmap_enrich.run(cfg, open_ports, scan_id=self.scan.id))
 
         elif stage == Stage.device_scan:
          
             if cfg.scope_mode != ScopeMode.cidr:
                 logger.info("scan %s: device_scan skipped (scope_mode is not cidr)", self.scan.id)
                 return
-            await self._store_stream(stage, device_scan.run(cfg, self._targets), AssetType.device)
+            await self._store_stream(stage, device_scan.run(cfg, self._targets, scan_id=self.scan.id), AssetType.device)
 
         elif stage == Stage.screenshot:
             urls = self._cached(AssetType.http_service)
@@ -272,28 +279,28 @@ class ReconOrchestrator:
             if not urls:
                 urls = self._targets
             if urls:
-                await self._store_stream(stage, screenshot.run(cfg, urls), AssetType.finding)
+                await self._store_stream(stage, screenshot.run(cfg, urls, scan_id=self.scan.id), AssetType.finding)
 
         elif stage == Stage.url_collect:
             hosts = self._cached(AssetType.subdomain)
             if not hosts:
                 hosts = self._targets
-            await self._store_stream(stage, url_collect.run(cfg, hosts), AssetType.url)
+            await self._store_stream(stage, url_collect.run(cfg, hosts, scan_id=self.scan.id), AssetType.url)
             if Stage.url_collect in self.config.enabled_stages:
                 await self._run_stage(Stage.js_analysis)
 
         elif stage == Stage.katana_crawl:
             base_urls = self._cached(AssetType.http_service) or self._targets
-            await self._store_stream(stage, katana_crawl.run(cfg, base_urls), AssetType.url)
+            await self._store_stream(stage, katana_crawl.run(cfg, base_urls, scan_id=self.scan.id), AssetType.url)
             await self._run_stage(Stage.js_analysis)
 
         elif stage == Stage.dir_fuzz:
             base_urls = self._cached(AssetType.http_service) or self._targets
-            await self._store_stream(stage, dir_fuzz.run(cfg, base_urls), AssetType.directory)
+            await self._store_stream(stage, dir_fuzz.run(cfg, base_urls, scan_id=self.scan.id), AssetType.directory)
 
         elif stage == Stage.js_analysis:
             js_urls = [u for u in self._cached(AssetType.url) if u.endswith(".js")]
-            await self._store_stream(stage, js_analysis.run(cfg, js_urls), AssetType.js_file)
+            await self._store_stream(stage, js_analysis.run(cfg, js_urls, scan_id=self.scan.id), AssetType.js_file)
 
     async def run(self):
         self.scan.status = ScanStatus.running
@@ -330,4 +337,5 @@ class ReconOrchestrator:
             # Clean up global registry
             _running_scans.pop(self.scan.id, None)
             _scan_stop_events.pop(self.scan.id, None)
+            dir_fuzz.clear_progress(self.scan.id)
             logger.info("scan %s finished: %s", self.scan.id, self.scan.status)
