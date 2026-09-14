@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 from datetime import datetime
@@ -13,8 +14,9 @@ from sqlmodel import Session, select
 
 from app.auth import auth_enabled, require_api_key
 from app.database import get_session, init_db, engine
-from app.models import Asset, Scan, ScanConfig, ScanStatus, Wordlist
+from app.models import Asset, Project, Scan, ScanConfig, ScanStatus, Wordlist, ScanRead
 from app.orchestrator import ReconOrchestrator
+from app.tools import dir_fuzz
 from app.wordlists import save_uploaded_wordlist
 
 logging.basicConfig(
@@ -25,7 +27,7 @@ logger = logging.getLogger("recon.api")
 
 app = FastAPI(title="Recon Chain API")
 
-# Allow all origins for development
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -54,18 +56,27 @@ def health():
     return {"status": "ok", "auth_enabled": auth_enabled()}
 
 
-@app.post("/scans", response_model=Scan, dependencies=[Depends(require_api_key)])
+@app.post("/scans", response_model=ScanRead, dependencies=[Depends(require_api_key)])
 async def create_scan(
     config: ScanConfig,
     session: Session = Depends(get_session),
     name: Optional[str] = None,
+    project_id: Optional[int] = None,
 ):
+    # Serialize enabled stages to JSON so the UI can render them as badges later
+    stages_json = json.dumps([
+        s.value if hasattr(s, "value") else str(s)
+        for s in config.enabled_stages
+    ])
+
     scan = Scan(
+        project_id=project_id,
         name=name or config.target,
         target=config.target,
         scope_mode=config.scope_mode,
         config_json=config.model_dump(mode="json"),
         status=ScanStatus.queued,
+        enabled_stages=stages_json,
     )
     session.add(scan)
     session.commit()
@@ -76,6 +87,7 @@ async def create_scan(
     task.add_done_callback(lambda t, sid=scan.id: _scan_tasks.pop(sid, None))
 
     return scan
+
 
 @app.post("/scans/{scan_id}/stop", dependencies=[Depends(require_api_key)])
 async def stop_scan(scan_id: int, session: Session = Depends(get_session)):
@@ -92,7 +104,6 @@ async def stop_scan(scan_id: int, session: Session = Depends(get_session)):
 
     task = _scan_tasks.get(scan_id)
     if task and not task.done():
-    
         task.cancel()
 
     scan.status = ScanStatus.failed
@@ -103,10 +114,16 @@ async def stop_scan(scan_id: int, session: Session = Depends(get_session)):
 
     return {"status": "stopped"}
 
-@app.delete("/scans", dependencies=[Depends(require_api_key)])
-def clear_scans(session: Session = Depends(get_session)):
 
-    scans = session.exec(select(Scan)).all()
+@app.delete("/scans", dependencies=[Depends(require_api_key)])
+def clear_scans(
+    session: Session = Depends(get_session),
+    project_id: Optional[int] = Query(None, description="only clear scans belonging to this project; omit to clear unassigned scans only"),
+):
+    query = select(Scan)
+    if project_id is not None:
+        query = query.where(Scan.project_id == project_id)
+    scans = session.exec(query).all()
     deleted = 0
     skipped_running = 0
     for scan in scans:
@@ -120,10 +137,9 @@ def clear_scans(session: Session = Depends(get_session)):
     session.commit()
     return {"deleted": deleted, "skipped_running": skipped_running}
 
+
 @app.delete("/scans/{scan_id}", dependencies=[Depends(require_api_key)])
 def delete_scan(scan_id: int, session: Session = Depends(get_session)):
-    """Delete a single scan (and its assets). Refuses to delete a scan
-    that's still running/queued - stop it first."""
     scan = session.get(Scan, scan_id)
     if not scan:
         raise HTTPException(404, "scan not found")
@@ -135,12 +151,13 @@ def delete_scan(scan_id: int, session: Session = Depends(get_session)):
     session.commit()
     return {"deleted": True}
 
-@app.get("/scans", response_model=list[Scan], dependencies=[Depends(require_api_key)])
+
+@app.get("/scans", response_model=list[ScanRead], dependencies=[Depends(require_api_key)])
 def list_scans(session: Session = Depends(get_session)):
     return session.exec(select(Scan).order_by(Scan.created_at.desc())).all()
 
 
-@app.get("/scans/{scan_id}", response_model=Scan, dependencies=[Depends(require_api_key)])
+@app.get("/scans/{scan_id}", response_model=ScanRead, dependencies=[Depends(require_api_key)])
 def get_scan(scan_id: int, session: Session = Depends(get_session)):
     scan = session.get(Scan, scan_id)
     if not scan:
@@ -206,6 +223,14 @@ def get_summary(scan_id: int, session: Session = Depends(get_session)):
     }
 
 
+@app.get("/scans/{scan_id}/dir_fuzz_progress", dependencies=[Depends(require_api_key)])
+def get_dir_fuzz_progress(scan_id: int):
+    progress = dir_fuzz.get_progress(scan_id)
+    if not progress:
+        return {"active": False}
+    return {"active": True, **progress}
+
+
 @app.get("/assets/{asset_id}/screenshot", dependencies=[Depends(require_api_key)])
 def get_screenshot(asset_id: int, session: Session = Depends(get_session)):
     asset = session.get(Asset, asset_id)
@@ -235,3 +260,43 @@ async def upload_wordlist(
 @app.get("/wordlists", response_model=list[Wordlist], dependencies=[Depends(require_api_key)])
 def list_wordlists(session: Session = Depends(get_session)):
     return session.exec(select(Wordlist).order_by(Wordlist.uploaded_at.desc())).all()
+
+
+@app.post("/projects", response_model=Project, dependencies=[Depends(require_api_key)])
+def create_project(name: str, description: Optional[str] = None, session: Session = Depends(get_session)):
+    project = Project(name=name, description=description)
+    session.add(project)
+    session.commit()
+    session.refresh(project)
+    return project
+
+
+@app.get("/projects", response_model=list[Project])
+def list_projects(session: Session = Depends(get_session)):
+    return session.exec(select(Project)).all()
+
+
+@app.get("/projects/{project_id}/scans", response_model=list[ScanRead])
+def list_project_scans(project_id: int, session: Session = Depends(get_session)):
+    return session.exec(select(Scan).where(Scan.project_id == project_id)).all()
+
+
+@app.delete("/projects/{project_id}", dependencies=[Depends(require_api_key)])
+def delete_project(project_id: int, session: Session = Depends(get_session)):
+    project = session.get(Project, project_id)
+    if not project:
+        raise HTTPException(404, "Project not found")
+
+    scans = session.exec(select(Scan).where(Scan.project_id == project_id)).all()
+    deleted_scans = 0
+    for scan in scans:
+        if scan.status in (ScanStatus.running, ScanStatus.queued):
+            raise HTTPException(400, f"Stop scan '{scan.name or scan.target}' before deleting this project")
+        for asset in session.exec(select(Asset).where(Asset.scan_id == scan.id)).all():
+            session.delete(asset)
+        session.delete(scan)
+        deleted_scans += 1
+
+    session.delete(project)
+    session.commit()
+    return {"status": "deleted", "scans_deleted": deleted_scans}
