@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 import dns.resolver
 
@@ -58,13 +58,13 @@ async def _via_python(hosts: list[str], concurrency: int) -> AsyncIterator[RawRe
             yield RawResult(type="ip", value=ip, source="dnspython", parent_value=host)
 
 
-async def _via_dnsx(hosts: list[str]) -> AsyncIterator[RawResult]:
+async def _via_dnsx(hosts: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     import tempfile, os
     with tempfile.NamedTemporaryFile("w", delete=False, suffix=".txt") as f:
         f.write("\n".join(hosts))
         path = f.name
     try:
-        async for line in run_cmd_streaming(["dnsx", "-l", path, "-a", "-cname", "-json", "-silent"], timeout=180):
+        async for line in run_cmd_streaming(["dnsx", "-l", path, "-a", "-cname", "-json", "-silent"], timeout=180, scan_id=scan_id):
             try:
                 obj = json.loads(line)
             except json.JSONDecodeError:
@@ -83,13 +83,13 @@ async def _via_dnsx(hosts: list[str]) -> AsyncIterator[RawResult]:
         os.unlink(path)
 
 
-async def run(config: ScanConfig, subdomains: list[str]) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, subdomains: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     if not subdomains:
         return
     if which("dnsx"):
         try:
             got_any = False
-            async for r in _via_dnsx(subdomains):
+            async for r in _via_dnsx(subdomains, scan_id=scan_id):
                 got_any = True
                 yield r
             if got_any:
