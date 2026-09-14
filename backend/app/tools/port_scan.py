@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 from app.models import ScanConfig
 from app.tools.base import ConcurrencyLimiter, RawResult, run_cmd_streaming, which
@@ -58,7 +58,7 @@ async def _via_python(ips: list[str], ports: list[int], concurrency: int) -> Asy
             yield result
 
 
-async def _via_naabu(ips: list[str], ports: list[int]) -> AsyncIterator[RawResult]:
+async def _via_naabu(ips: list[str], ports: list[int], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     import tempfile, os
     with tempfile.NamedTemporaryFile("w", delete=False, suffix=".txt") as f:
         f.write("\n".join(ips))
@@ -66,7 +66,7 @@ async def _via_naabu(ips: list[str], ports: list[int]) -> AsyncIterator[RawResul
     port_arg = ",".join(str(p) for p in ports)
     try:
         cmd = ["naabu", "-list", path, "-p", port_arg, "-json", "-silent"]
-        async for line in run_cmd_streaming(cmd, timeout=300):
+        async for line in run_cmd_streaming(cmd, timeout=300, scan_id=scan_id):
             try:
                 obj = json.loads(line)
             except json.JSONDecodeError:
@@ -83,14 +83,14 @@ async def _via_naabu(ips: list[str], ports: list[int]) -> AsyncIterator[RawResul
         os.unlink(path)
 
 
-async def run(config: ScanConfig, ips: list[str]) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, ips: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     if not ips:
         return
     ports = config.ports or DEFAULT_PORTS
     if which("naabu"):
         try:
             got_any = False
-            async for r in _via_naabu(ips, ports):
+            async for r in _via_naabu(ips, ports, scan_id=scan_id):
                 got_any = True
                 yield r
             if got_any:
