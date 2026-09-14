@@ -1,11 +1,11 @@
 """
-HTTP probing + URL status check (fully merged).
+HTTP probing + URL status check merged
 """
 from __future__ import annotations
 
 import json
 import time
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 import httpx as httpx_client
 
@@ -82,7 +82,7 @@ async def _via_python(urls: list[str], rate: RateLimiter) -> AsyncIterator[RawRe
                 yield result   
 
 
-async def _via_httpx_cli(urls: list[str]) -> AsyncIterator[RawResult]:
+async def _via_httpx_cli(urls: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     """Check URLs using ProjectDiscovery's httpx CLI."""
     import tempfile, os
     
@@ -98,7 +98,7 @@ async def _via_httpx_cli(urls: list[str]) -> AsyncIterator[RawResult]:
             "-title", "-server", 
             "-status-code", "-content-length",
             "-response-time", "-follow-redirects"
-        ])
+        ], scan_id=scan_id)
     finally:
         os.unlink(path)
 
@@ -129,7 +129,7 @@ async def _via_httpx_cli(urls: list[str]) -> AsyncIterator[RawResult]:
         )
 
 
-async def run(config: ScanConfig, urls: list[str]) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, urls: list[str], scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
 
     if not urls:
         print("[HTTP Probe] No URLs provided")
@@ -140,7 +140,7 @@ async def run(config: ScanConfig, urls: list[str]) -> AsyncIterator[RawResult]:
     # Try httpx CLI first if available
     if which("httpx", verify_contains="projectdiscovery"):
         try:
-            async for result in _via_httpx_cli(urls):   
+            async for result in _via_httpx_cli(urls, scan_id=scan_id):   
                 yield result
             return
         except Exception as e:
