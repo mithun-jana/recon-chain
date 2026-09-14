@@ -4,5 +4,5 @@ sqlmodel>=0.0.16
 httpx>=0.27
 dnspython>=2.6
 python-multipart>=0.0.9
-# optional, only needed for real screenshots:
-# playwright>=1.42
+playwright>=1.42
+dirsearch>=0.4.3
