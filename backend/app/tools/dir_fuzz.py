@@ -1,5 +1,5 @@
 """
-Directory / content discovery (fuzzing) — PRODUCTION READY.
+Directory / content discovery (fuzzing) 
 """
 from __future__ import annotations
 
