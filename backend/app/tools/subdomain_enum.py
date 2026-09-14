@@ -4,7 +4,7 @@ Subdomain enumeration + DNS resolution (merged).
 from __future__ import annotations
 
 import json
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 import httpx
 
@@ -36,8 +36,8 @@ async def _via_crtsh(domain: str) -> AsyncIterator[RawResult]:
             )
 
 
-async def _via_subfinder(domain: str) -> AsyncIterator[RawResult]:
-    async for line in run_cmd_streaming(["subfinder", "-d", domain, "-silent", "-json"], timeout=180):
+async def _via_subfinder(domain: str, scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
+    async for line in run_cmd_streaming(["subfinder", "-d", domain, "-silent", "-json"], timeout=180, scan_id=scan_id):
         try:
             host = json.loads(line).get("host")
         except json.JSONDecodeError:
@@ -46,15 +46,15 @@ async def _via_subfinder(domain: str) -> AsyncIterator[RawResult]:
             yield RawResult(type="subdomain", value=host, source="subfinder")
 
 
-async def _via_amass(domain: str) -> AsyncIterator[RawResult]:
+async def _via_amass(domain: str, scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
     cmd = ["amass", "enum", "-passive", "-d", domain, "-silent"]
-    async for line in run_cmd_streaming(cmd, timeout=300):
+    async for line in run_cmd_streaming(cmd, timeout=300, scan_id=scan_id):
         host = line.strip()
         if host:
             yield RawResult(type="subdomain", value=host, source="amass")
 
 
-async def run(config: ScanConfig) -> AsyncIterator[RawResult]:
+async def run(config: ScanConfig, scan_id: Optional[int] = None) -> AsyncIterator[RawResult]:
 
     first_target = config.target.split(",")[0].strip()
     domain = first_target.split("://")[-1].split("/")[0].split(":")[0].strip()
@@ -71,7 +71,7 @@ async def run(config: ScanConfig) -> AsyncIterator[RawResult]:
 
     if which("subfinder"):
         try:
-            async for r in _via_subfinder(domain):
+            async for r in _via_subfinder(domain, scan_id=scan_id):
                 if r.value not in seen:
                     seen.add(r.value)
                     subdomains.append(r.value)
@@ -81,7 +81,7 @@ async def run(config: ScanConfig) -> AsyncIterator[RawResult]:
 
     if which("amass"):
         try:
-            async for r in _via_amass(domain):
+            async for r in _via_amass(domain, scan_id=scan_id):
                 if r.value not in seen:
                     seen.add(r.value)
                     subdomains.append(r.value)
@@ -93,5 +93,5 @@ async def run(config: ScanConfig) -> AsyncIterator[RawResult]:
         subdomains.append(domain)
         yield RawResult(type="subdomain", value=domain, source="target")
 
-    async for ip_result in dns_resolve_run(config, subdomains):
+    async for ip_result in dns_resolve_run(config, subdomains, scan_id=scan_id):
         yield ip_result
